@@ -1,46 +1,49 @@
 // resources/js/layouts/AppLayout.tsx
 import { ReactNode } from 'react';
-
-type BreadcrumbItem = {
-    title: string;
-    href: string;
-};
+import { usePage, Link } from '@inertiajs/react';
 
 interface AppLayoutProps {
     children: ReactNode;
-    breadcrumbs?: BreadcrumbItem[];
 }
 
-export default function AppLayout({ children, breadcrumbs = [] }: AppLayoutProps) {
+const navItems = [
+    { title: 'Dashboard', href: '/dashboard' },
+    { title: 'User', href: '/user' } 
+];
+
+export default function AppLayout({ children }: AppLayoutProps) {
+    const { url } = usePage();
+
+    const showNav = url !== '/' && !url.startsWith('/login');
+
     return (
-        <div className="min-h-screen bg-gray-100 text-gray-900">
+        <div className="min-h-screen text-gray-900">
             {/* Header */}
-            <header className="bg-white shadow">
-                <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-                    <h1 className="text-xl font-bold">MyApp</h1>
+            <header className="flex justify-start items-center py-4">
+                <div className="max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+                    <h1 className="text-xl font-bold">BugReport</h1>
                 </div>
+
+                {/* Menu Navigasi Utama */}
+                {showNav && (
+                    <nav className="border-gray-200">
+                        <div className="max-w-7xl mx-auto px-4 py-2 sm:px-6 lg:px-8">
+                            <ol className="flex space-x-6 text-md text-gray-400 font-semibold">
+                                {navItems.map((item, idx) => (
+                                    <li key={idx} className="flex items-center">
+                                        <Link href={item.href} className="hover:bg-gray-300 hover:text-black px-5 py-2 rounded-lg">
+                                            {item.title}
+                                        </Link>
+                                    </li>
+                                ))}
+                            </ol>
+                        </div>
+                    </nav>
+                )}
             </header>
 
-            {/* Breadcrumbs */}
-            {breadcrumbs.length > 0 && (
-                <nav className="bg-gray-50 border-b border-gray-200">
-                    <div className="max-w-7xl mx-auto px-4 py-2 sm:px-6 lg:px-8">
-                        <ol className="flex space-x-2 text-sm text-gray-600">
-                            {breadcrumbs.map((item, idx) => (
-                                <li key={idx} className="flex items-center">
-                                    {idx > 0 && <span className="mx-1">/</span>}
-                                    <a href={item.href} className="hover:underline">
-                                        {item.title}
-                                    </a>
-                                </li>
-                            ))}
-                        </ol>
-                    </div>
-                </nav>
-            )}
-
             {/* Main Content */}
-            <main className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+            <main className="max-w-screen px-5">
                 {children}
             </main>
         </div>
