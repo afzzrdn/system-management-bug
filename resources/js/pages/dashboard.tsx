@@ -1,34 +1,34 @@
-import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Dashboard',
-        href: '/dashboard',
-    },
+const breadcrumbs = [
+    { title: 'Dashboard', href: '/dashboard' },
 ];
 
 export default function Dashboard() {
+    const handleLogout = () => {
+        router.post('/logout', {}, {
+            onSuccess: () => router.visit('/login'),
+        });
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Dashboard" />
-            <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4 overflow-x-auto">
-                <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-                    <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                    </div>
-                    <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                    </div>
-                    <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                    </div>
+            <Head>
+                <title>Dashboard</title>
+            </Head>
+
+            <div className="bg-white p-6 rounded shadow">
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-2xl font-bold">Welcome to the Dashboard</h2>
+                    <button
+                        onClick={handleLogout}
+                        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                    >
+                        Logout
+                    </button>
                 </div>
-                <div className="relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-                    <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                </div>
+                <p className="text-gray-700">This is your starting point.</p>
             </div>
         </AppLayout>
     );

@@ -1,119 +1,104 @@
-import { Head, useForm } from '@inertiajs/react';
-import { LoaderCircle } from 'lucide-react';
-import { FormEventHandler } from 'react';
+import React, { useState, ChangeEvent, FormEvent } from 'react';
+import { router } from '@inertiajs/react';
 
-import InputError from '@/components/input-error';
-import TextLink from '@/components/text-link';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import AuthLayout from '@/layouts/auth-layout';
-
-type RegisterForm = {
-    name: string;
-    email: string;
-    password: string;
-    password_confirmation: string;
-};
+interface ValidationErrors {
+    name?: string;
+    email?: string;
+    password?: string;
+}
 
 export default function Register() {
-    const { data, setData, post, processing, errors, reset } = useForm<Required<RegisterForm>>({
+    const [form, setForm] = useState({
         name: '',
         email: '',
         password: '',
-        password_confirmation: '',
+        password_confirmation: ''
     });
 
-    const submit: FormEventHandler = (e) => {
+    const [errors, setErrors] = useState<ValidationErrors>({});
+
+    const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+        setForm({ ...form, [e.target.name]: e.target.value });
+    };
+
+    const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
-        post(route('register'), {
-            onFinish: () => reset('password', 'password_confirmation'),
+        setErrors({}); 
+
+        router.post('/register', form, {
+            onError: (err: ValidationErrors) => {
+                setErrors(err);
+            },
+            onSuccess: () => {
+                alert('Registrasi berhasil! Silakan login.');
+                router.visit('/login');
+            },
         });
     };
 
     return (
-        <AuthLayout title="Create an account" description="Enter your details below to create your account">
-            <Head title="Register" />
-            <form className="flex flex-col gap-6" onSubmit={submit}>
-                <div className="grid gap-6">
-                    <div className="grid gap-2">
-                        <Label htmlFor="name">Name</Label>
-                        <Input
-                            id="name"
-                            type="text"
-                            required
-                            autoFocus
-                            tabIndex={1}
-                            autoComplete="name"
-                            value={data.name}
-                            onChange={(e) => setData('name', e.target.value)}
-                            disabled={processing}
-                            placeholder="Full name"
-                        />
-                        <InputError message={errors.name} className="mt-2" />
-                    </div>
+        <div className='bg-white border-2 p-8 rounded-lg shadow-md w-full max-w-md'>
+            <h2 className='text-2xl font-bold mb-6 text-center'>Register</h2>
 
-                    <div className="grid gap-2">
-                        <Label htmlFor="email">Email address</Label>
-                        <Input
-                            id="email"
-                            type="email"
-                            required
-                            tabIndex={2}
-                            autoComplete="email"
-                            value={data.email}
-                            onChange={(e) => setData('email', e.target.value)}
-                            disabled={processing}
-                            placeholder="email@example.com"
-                        />
-                        <InputError message={errors.email} />
-                    </div>
-
-                    <div className="grid gap-2">
-                        <Label htmlFor="password">Password</Label>
-                        <Input
-                            id="password"
-                            type="password"
-                            required
-                            tabIndex={3}
-                            autoComplete="new-password"
-                            value={data.password}
-                            onChange={(e) => setData('password', e.target.value)}
-                            disabled={processing}
-                            placeholder="Password"
-                        />
-                        <InputError message={errors.password} />
-                    </div>
-
-                    <div className="grid gap-2">
-                        <Label htmlFor="password_confirmation">Confirm password</Label>
-                        <Input
-                            id="password_confirmation"
-                            type="password"
-                            required
-                            tabIndex={4}
-                            autoComplete="new-password"
-                            value={data.password_confirmation}
-                            onChange={(e) => setData('password_confirmation', e.target.value)}
-                            disabled={processing}
-                            placeholder="Confirm password"
-                        />
-                        <InputError message={errors.password_confirmation} />
-                    </div>
-
-                    <Button type="submit" className="mt-2 w-full" tabIndex={5} disabled={processing}>
-                        {processing && <LoaderCircle className="h-4 w-4 animate-spin" />}
-                        Create account
-                    </Button>
+            <form onSubmit={handleSubmit}>
+                <div className='mb-4'>
+                    <label className='block text-gray-700 mb-2'>Name</label>
+                    <input
+                        type="text"
+                        name="name"
+                        value={form.name}
+                        onChange={handleChange}
+                        className='w-full px-3 py-2 border rounded-lg'
+                        required
+                    />
+                    {errors.name && <div className='text-red-500 text-sm mt-1'>{errors.name}</div>}
                 </div>
 
-                <div className="text-center text-sm text-muted-foreground">
-                    Already have an account?{' '}
-                    <TextLink href={route('login')} tabIndex={6}>
-                        Log in
-                    </TextLink>
+                <div className='mb-4'>
+                    <label className='block text-gray-700 mb-2'>Email</label>
+                    <input
+                        type="email"
+                        name="email"
+                        value={form.email}
+                        onChange={handleChange}
+                        className='w-full px-3 py-2 border rounded-lg'
+                        required
+                    />
+                    {errors.email && <div className='text-red-500 text-sm mt-1'>{errors.email}</div>}
                 </div>
+
+                <div className='mb-4'>
+                    <label className='block text-gray-700 mb-2'>Password</label>
+                    <input
+                        type="password"
+                        name="password"
+                        value={form.password}
+                        onChange={handleChange}
+                        className='w-full px-3 py-2 border rounded-lg'
+                        required
+                    />
+                    {errors.password && <div className='text-red-500 text-sm mt-1'>{errors.password}</div>}
+                </div>
+
+                <div className='mb-6'>
+                    <label className='block text-gray-700 mb-2'>Confirm Password</label>
+                    <input
+                        type="password"
+                        name="password_confirmation"
+                        value={form.password_confirmation}
+                        onChange={handleChange}
+                        className='w-full px-3 py-2 border rounded-lg'
+                        required
+                    />
+                </div>
+
+                <button
+                    type="submit"
+                    className='w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition-colors'
+                >
+                    Register
+                </button>
             </form>
-        </AuthLayout>
+        </div>
     );
 }
