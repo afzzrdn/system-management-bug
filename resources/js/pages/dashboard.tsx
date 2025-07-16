@@ -1,6 +1,6 @@
 import AppLayout from '@/layouts/app-layout';
 import { Head, router, Link } from '@inertiajs/react';
-import { Bell, FileText, AlertTriangle, User, ArrowUpRight, Check, Verified } from 'lucide-react';
+import { Bell, User, ArrowUpRight, Verified, CodeXml } from 'lucide-react';
 import { ReactNode } from 'react';
 
 // Tipe untuk props komponen
@@ -65,7 +65,7 @@ export default function Dashboard({ auth, userCount }: DashboardProps) {
                         href={route('users.index')}
                     />
                     <StatCard icon={<Bell size={18} />} title="Laporan Bug" value="15" iconBgColor="bg-orange-500" href='#' />
-                    <StatCard icon={<AlertTriangle size={18} />} title="Sedang Dikerjakan" value="30" iconBgColor="bg-yellow-500" href='#' />
+                    <StatCard icon={<CodeXml size={18} />} title="Sedang Dikerjakan" value="30" iconBgColor="bg-yellow-500" href='#' />
                     <StatCard icon={<Verified size={18} />} title="Sudah Diselesaikan" value="7" iconBgColor="bg-green-500" href='#' />
                 </div>
 
