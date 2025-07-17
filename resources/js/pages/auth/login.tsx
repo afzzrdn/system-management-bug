@@ -26,7 +26,7 @@ export default function Login() {
                     <div className="w-full max-w-md space-y-6">
                         <div className="text-left">
                             <h2 className="text-4xl font-bold">Selamat Datang Kembali</h2>
-                            <p className="mt-4 text-muted-foreground text-lg">
+                            <p className="mt-4 text-muted-foreground text-xl">
                                 Masukkan email dan password untuk masuk
                             </p>
                         </div>
@@ -64,7 +64,7 @@ export default function Login() {
                                 {processing ? 'Memproses...' : 'Masuk'}
                             </Button>
                         </form>
-                        <div className="text-center text-base">
+                        <div className="text-center text-lg">
                             Belum punya akun?{' '}
                             <Link href={route('register')} className="underline font-semibold">
                                 Daftar di sini
