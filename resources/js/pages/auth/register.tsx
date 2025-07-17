@@ -34,17 +34,17 @@ export default function Register() {
                     />
                 </div>
 
-                <div className="flex items-center justify-center px-6 py-10 order-2">
+                <div className="flex items-center justify-center px-6 py-8 order-2">
                     <div className="w-full max-w-md space-y-6">
                         <div className="text-left">
                             <h2 className="text-4xl font-bold">Buat Akun Baru</h2>
-                            <p className="mt-3 text-muted-foreground text-lg">
+                            <p className="mt-3 text-muted-foreground text-2xl">
                                 Masukkan informasi Anda untuk membuat akun
                             </p>
                         </div>
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div>
-                                <Label htmlFor="name" className="text-base">Nama</Label>
+                                <Label htmlFor="name" className="text-lg">Nama</Label>
                                 <Input
                                     id="name"
                                     type="text"
@@ -57,7 +57,7 @@ export default function Register() {
                                 {errors.name && <p className="mt-2 text-sm text-destructive">{errors.name}</p>}
                             </div>
                             <div>
-                                <Label htmlFor="email" className="text-base">Email</Label>
+                                <Label htmlFor="email" className="text-lg">Email</Label>
                                 <Input
                                     id="email"
                                     type="email"
@@ -70,7 +70,7 @@ export default function Register() {
                                 {errors.email && <p className="mt-2 text-sm text-destructive">{errors.email}</p>}
                             </div>
                             <div>
-                                <Label htmlFor="password" className="text-base">Password</Label>
+                                <Label htmlFor="password" className="text-lg">Password</Label>
                                 <PasswordInput
                                     id="password"
                                     required
@@ -81,7 +81,7 @@ export default function Register() {
                                 />
                             </div>
                             <div>
-                                <Label htmlFor="password_confirmation" className="text-base">Konfirmasi Password</Label>
+                                <Label htmlFor="password_confirmation" className="text-lg">Konfirmasi Password</Label>
                                 <PasswordInput
                                     id="password_confirmation"
                                     required
@@ -99,7 +99,7 @@ export default function Register() {
                                 {processing ? 'Membuat Akun...' : 'Buat Akun'}
                             </Button>
                         </form>
-                        <div className="text-center text-sm">
+                        <div className="text-center text-lg">
                             Sudah punya akun?{' '}
                             <Link href={route('login')} className="underline font-medium">
                                 Masuk
