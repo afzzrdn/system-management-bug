@@ -52,7 +52,7 @@ export default function Register() {
                             <Label htmlFor="password_confirmation">Confirm Password</Label>
                             <Input id="password_confirmation" type="password" required value={data.password_confirmation} onChange={(e) => setData('password_confirmation', e.target.value)} />
                         </div>
-                        <Button type="submit" className="w-full" disabled={processing}>
+                        <Button type="submit" className="w-full bg-indigo-700 text-white" disabled={processing}>
                             {processing ? "Creating Account..." : "Create an account"}
                         </Button>
                     </form>

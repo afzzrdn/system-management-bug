@@ -12,7 +12,7 @@ class DashboardController extends Controller
     {
         $userCount = User::count();
 
-        return Inertia::render('dashboard', [
+        return Inertia::render('admin/dashboard', [
             'userCount' => $userCount,
             // Anda bisa menambahkan data lain untuk kartu statistik lainnya di sini
             // 'expiringSoonCount' => ...

@@ -1,4 +1,3 @@
-// resources/js/Pages/Dashboard.tsx
 
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router } from '@inertiajs/react';

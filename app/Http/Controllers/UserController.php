@@ -19,7 +19,7 @@ class UserController extends Controller
      */
     public function index(Request $request): Response
     {
-        return Inertia::render('admin/user', [
+        return Inertia::render('admin/users', [
             'users' => User::query()
                 ->latest()
                 // Menerapkan filter pencarian jika ada

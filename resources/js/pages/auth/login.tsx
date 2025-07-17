@@ -53,9 +53,12 @@ export default function Login() {
                             </div>
                         </div>
 
-                        <div className="text-sm">
+                        <div className="text-sm flex space-x-2">
+                            <p>
+                                Belum punya akun?
+                            </p>
                             <Link href={route('register')} className="font-medium text-indigo-600 hover:text-indigo-500">
-                                Don't have an account? Sign up
+                                 Buat Akun
                             </Link>
                         </div>
 

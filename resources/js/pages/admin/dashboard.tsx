@@ -1,12 +1,12 @@
 import AppLayout from '@/layouts/app-layout';
-import { Head, router, Link } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { Bell, User, ArrowUpRight, Verified, CodeXml } from 'lucide-react';
 import { ReactNode } from 'react';
 
 // Tipe untuk props komponen
 interface DashboardProps {
     auth: { user: any };
-    userCount: number; // <-- Menerima prop userCount
+    userCount: number;
 }
 
 type StatCardProps = {
@@ -34,25 +34,17 @@ const StatCard = ({ icon, title, value, iconBgColor, href }: StatCardProps) => (
 
 
 // Menerima props 'userCount'
-export default function Dashboard({ auth, userCount }: DashboardProps) {
-    const handleLogout = () => {
-        router.post('/logout');
-    };
-
+export default function Dashboard({ userCount }: DashboardProps) {
     return (
         <AppLayout>
             <Head>
-                <title>Dashboard</title>
+                <title>Admin Dashboard</title>
             </Head>
 
             <div className="p-1 md:p-4">
                 <div className="flex flex-wrap justify-between items-center mb-6 gap-4">
-                    <h2 className="text-2xl font-semibold text-gray-400">Dashboard</h2>
-                    <div className="flex items-center space-x-4">
-                        <button onClick={handleLogout} className="bg-red-100 text-red-600 px-4 py-2 rounded-lg hover:bg-red-200">
-                            Logout
-                        </button>
-                    </div>
+                    <h2 className="text-2xl font-semibold text-gray-400">Admin Dashboard</h2>
+                    
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

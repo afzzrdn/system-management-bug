@@ -44,9 +44,17 @@ class AuthController extends Controller
             ]);
         }
 
-        $request->session()->regenerate();
+        $role = Auth::user()->role instanceof \App\Enums\UserRole
+        ? Auth::user()->role->value
+        : Auth::user()->role;
 
-        return redirect()->intended('/dashboard');
+        $redirectMap = [
+            'admin' => '/admin/dashboard',
+            'developer' => '/developer/dashboard',
+            'client' => '/client/dashboard',
+        ];
+
+        return redirect()->to($redirectMap[$role] ?? '/dashboard');
     }   
 
     // POST /logout
