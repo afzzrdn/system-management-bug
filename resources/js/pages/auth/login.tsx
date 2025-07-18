@@ -1,5 +1,9 @@
 import React, { FormEvent } from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import PasswordInput from '@/components/PasswordInput';
 
 export default function Login() {
     const { data, setData, post, processing, errors } = useForm({
@@ -13,67 +17,73 @@ export default function Login() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <>
             <Head title="Log in" />
-            <div className="sm:mx-auto sm:w-full sm:max-w-md">
-                <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                    Sign in to your account
-                </h2>
-            </div>
 
-            <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-                <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-                    {errors.email && <div className='mb-4 text-red-600 text-sm font-medium'>{errors.email}</div>}
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email address</label>
-                            <div className="mt-1">
-                                <input
+            <div className="min-h-screen w-full grid grid-cols-1 lg:grid-cols-2 bg-white dark:bg-background">
+
+                <div className="flex items-center justify-center px-8 py-12 order-2 lg:order-1">
+                    <div className="w-full max-w-md space-y-6">
+                        <div className="text-left">
+                            <h2 className="text-4xl font-bold">Selamat Datang Kembali</h2>
+                            <p className="mt-4 text-muted-foreground text-xl">
+                                Masukkan email dan password untuk masuk
+                            </p>
+                        </div>
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            <div>
+                                <Label htmlFor="email" className="text-lg">Email</Label>
+                                <Input
                                     id="email"
                                     type="email"
+                                    placeholder="m@example.com"
+                                    required
                                     value={data.email}
                                     onChange={(e) => setData('email', e.target.value)}
-                                    required
-                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    className="w-full h-[50px]"
                                 />
+                                {errors.email && <p className="mt-2 text-sm text-destructive">{errors.email}</p>}
                             </div>
-                        </div>
-
-                        <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
-                            <div className="mt-1">
-                                <input
+                            <div>
+                                <Label htmlFor="password" className="text-lg">Password</Label>
+                                <PasswordInput
                                     id="password"
-                                    type="password"
+                                    required
                                     value={data.password}
                                     onChange={(e) => setData('password', e.target.value)}
-                                    required
-                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    error={errors.password}
+                                    className="w-full h-[50px]"
                                 />
                             </div>
-                        </div>
-
-                        <div className="text-sm flex space-x-2">
-                            <p>
-                                Belum punya akun?
-                            </p>
-                            <Link href={route('register')} className="font-medium text-indigo-600 hover:text-indigo-500">
-                                 Buat Akun
+                            <Button
+                                variant="secondary"
+                                type="submit"
+                                className="w-full h-[55px] text-lg font-semibold"
+                                disabled={processing}
+                            >
+                                {processing ? 'Memproses...' : 'Masuk'}
+                            </Button>
+                        </form>
+                        <div className="text-center text-lg">
+                            Belum punya akun?{' '}
+                            <Link href={route('register')} className="underline font-semibold">
+                                Daftar di sini
                             </Link>
                         </div>
+                        <footer className="text-center text-sm text-muted-foreground opacity-70">
+                            © 2023 ALL RIGHTS RESERVED
+                        </footer>
+                    </div>
+                </div>
 
-                        <div>
-                            <button
-                                type="submit"
-                                disabled={processing}
-                                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-                            >
-                                {processing ? 'Signing In...' : 'Sign In'}
-                            </button>
-                        </div>
-                    </form>
+                <div className="order-1 lg:order-2">
+                    <img
+                        src="/img/default-avatar.gif"
+                        alt="Background"
+                        className="w-full h-[250px] lg:h-full object-cover rounded-b-3xl lg:rounded-b-none lg:rounded-r-3xl"
+                    />
                 </div>
             </div>
-        </div>
+        </>
     );
 }
