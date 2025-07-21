@@ -5,6 +5,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { debounce } from 'lodash';
 import FilterDropdown from '@/components/DropDown';
 import SearchInput from '@/components/SearchInput';
+import UserDetail from '@/components/UserDetail';
 
 interface PageLink {
     url: string | null;
@@ -23,6 +24,8 @@ interface PaginatedUsers {
     data: User[];
     links: PageLink[];
     from: number;
+    to: number;      
+    total: number;   
 }
 
 interface DashboardProps {
@@ -42,6 +45,9 @@ interface DashboardProps {
 
 interface PaginationProps {
     links: PageLink[];
+    from: number;
+    to: number;
+    total: number;
 }
 
 const roles = [
@@ -50,35 +56,77 @@ const roles = [
     { value: 'client', label: 'Client' },
 ];
 
-const Pagination: React.FC<PaginationProps> = ({ links }) => {
+const Pagination: React.FC<PaginationProps> = ({ links, from, to, total }) => {
+    // Common classes for circular page number buttons
+    const numberClasses = "flex items-center justify-center w-7 h-7 mx-0.5 text-sm font-medium rounded-full";
+
     return (
-        <div className="flex flex-wrap -mb-1 mt-6">
-            {links.map((link, key) => {
-                if (link.url === null) {
+        <div className="flex items-center justify-between mt-6">
+            {/* Left side: Pagination Controls */}
+            <div className="flex items-center bg-white rounded-full p-1 shadow-sm border border-gray-200">
+                {links.map((link, key) => {
+                    // Use a unique key combining index and label
+                    const uniqueKey = `${key}-${link.label}`;
+
+                    // Render "Previous" and "Next" buttons
+                    if (key === 0 || key === links.length - 1) {
+                        return (
+                            <Link
+                                key={uniqueKey}
+                                href={link.url || '#'}
+                                className={`flex items-center justify-center px-4 h-10 text-sm font-medium ${link.url ? 'text-gray-600 hover:bg-gray-100 rounded-full' : 'text-gray-400 cursor-default'}`}
+                                dangerouslySetInnerHTML={{ __html: link.label }}
+                            />
+                        );
+                    }
+
+                    // Render ellipsis
+                    if (link.label === '...') {
+                        return (
+                            <span key={uniqueKey} className="flex items-center justify-center px-2 h-10 text-sm text-gray-500">
+                                ...
+                            </span>
+                        );
+                    }
+
+                    // Render active page number
+                    if (link.active) {
+                        return (
+                            <span key={uniqueKey} className={`${numberClasses} bg-indigo-500 text-white z-10`}>
+                                {link.label}
+                            </span>
+                        );
+                    }
+
+                    // Render inactive page number
                     return (
-                        <div
-                            key={key}
-                            className="mr-1 mb-1 px-4 py-3 text-sm leading-4 text-gray-400 border rounded cursor-default"
-                            dangerouslySetInnerHTML={{ __html: link.label }}
-                        />
+                        <Link
+                            key={uniqueKey}
+                            href={link.url || '#'}
+                            className={`${numberClasses} text-gray-600 hover:bg-gray-100`}
+                        >
+                            {link.label}
+                        </Link>
                     );
-                }
-                return (
-                    <Link
-                        key={key}
-                        className={`mr-1 mb-1 px-4 py-3 text-sm leading-4 border rounded hover:bg-white focus:border-indigo-500 focus:text-indigo-500 ${link.active ? 'bg-white' : ''}`}
-                        href={link.url}
-                        dangerouslySetInnerHTML={{ __html: link.label }}
-                    />
-                );
-            })}
+                })}
+            </div>
+
+            {/* Right side: Result Count */}
+            <div className="text-sm text-gray-700">
+                Showing <span className="font-semibold text-gray-900">{from}</span> to <span className="font-semibold text-gray-900">{to}</span> of <span className="font-semibold text-gray-900">{total}</span> results
+            </div>
         </div>
     );
 };
 
 export default function Dashboard({ users, flash, filters }: DashboardProps) {
     const [search, setSearch] = useState(filters.search || '');
-    const [role, setRole] = useState(filters.role || ''); 
+    const [role, setRole] = useState(filters.role || '');
+    const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
+    const handleRowClick = (user: User) => {
+        setSelectedUser(user);
+    };
 
     const handleDelete = (user: User) => {
         if (confirm(`Apakah Anda yakin ingin menghapus pengguna: ${user.name}?`)) {
@@ -159,13 +207,13 @@ export default function Dashboard({ users, flash, filters }: DashboardProps) {
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Peran</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                             {users.data.length > 0 ? (
                                 users.data.map((user, index) => (
-                                    <tr key={user.id}>
+                                    <tr key={user.id} onClick={() => handleRowClick(user)} className='cursor-pointer'>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{users.from + index}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.name}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.email}</td>
@@ -188,8 +236,19 @@ export default function Dashboard({ users, flash, filters }: DashboardProps) {
                     </table>
                 </div>
 
-                {users.data.length > 0 && <Pagination links={users.links} />}
+                {users.data.length > 0 && (
+                    <Pagination
+                        links={users.links}
+                        from={users.from}
+                        to={users.to}
+                        total={users.total}
+                    />
+                )}
             </div>
+            
+            {selectedUser && (
+                <UserDetail user={selectedUser} onClose={() => setSelectedUser(null)} />
+            )}
         </AppLayout>
     );
 }

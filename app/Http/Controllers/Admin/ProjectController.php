@@ -1,27 +1,39 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Enums\UserRole;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class ProjectController extends Controller
 {
     // Tampilkan daftar semua project
-    public function index()
+    public function index(): Response
     {
         $projects = Project::with('client')->latest()->get();
-        return view('projects.index', compact('projects'));
+        $clients = User::where('role', UserRole::Client->value)->get();
+
+        return Inertia::render('admin/project', [
+            'projects' => $projects,
+            'clients' => $clients,
+            'flash' => [
+                'success' => session('success'),
+            ],
+        ]);
     }
 
-    // Tampilkan form untuk membuat project baru
-    public function create()
+    public function create(): Response
     {
-        // Ambil semua client (role: client)
         $clients = User::where('role', UserRole::Client->value)->get();
-        return view('projects.create', compact('clients'));
+
+        return Inertia::render('admin/project', [
+            'clients' => $clients
+        ]);
     }
 
     // Simpan project baru ke database
@@ -30,7 +42,7 @@ class ProjectController extends Controller
         $validated = $request->validate([
             'name'        => 'required|string|max:255',
             'description' => 'nullable|string',
-            'client_id'   => 'required|exists:users,id',
+            'client_id'   => 'required|exists:users,id,role,' . UserRole::Client->value,
         ]);
 
         Project::create($validated);
@@ -38,18 +50,25 @@ class ProjectController extends Controller
         return redirect()->route('projects.index')->with('success', 'Project berhasil dibuat.');
     }
 
-    // Menampilkan detail 1 project (opsional)
-    public function show(Project $project)
+    // Tampilkan detail project
+    public function show(Project $project): Response
     {
         $project->load('client', 'bugs');
-        return view('projects.show', compact('project'));
+
+        return Inertia::render('admin/project', [
+            'project' => $project
+        ]);
     }
 
     // Tampilkan form edit project
-    public function edit(Project $project)
+    public function edit(Project $project): Response
     {
         $clients = User::where('role', UserRole::Client->value)->get();
-        return view('projects.edit', compact('project', 'clients'));
+
+        return Inertia::render('admin/project', [
+            'project' => $project,
+            'clients' => $clients
+        ]);
     }
 
     // Update data project
@@ -58,7 +77,7 @@ class ProjectController extends Controller
         $validated = $request->validate([
             'name'        => 'required|string|max:255',
             'description' => 'nullable|string',
-            'client_id'   => 'required|exists:users,id',
+            'client_id'   => 'required|exists:users,id,role,' . UserRole::Client->value,
         ]);
 
         $project->update($validated);
@@ -70,6 +89,7 @@ class ProjectController extends Controller
     public function destroy(Project $project)
     {
         $project->delete();
+
         return redirect()->route('projects.index')->with('success', 'Project berhasil dihapus.');
     }
 }
