@@ -32,8 +32,6 @@ const StatCard = ({ icon, title, value, iconBgColor, href }: StatCardProps) => (
     </Link>
 );
 
-
-// Menerima props 'userCount'
 export default function Dashboard({ userCount }: DashboardProps) {
     return (
         <AppLayout>
@@ -44,7 +42,6 @@ export default function Dashboard({ userCount }: DashboardProps) {
             <div className="p-1 md:p-4">
                 <div className="flex flex-wrap justify-between items-center mb-6 gap-4">
                     <h2 className="text-2xl font-semibold text-gray-400">Admin Dashboard</h2>
-                    
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -60,7 +57,6 @@ export default function Dashboard({ userCount }: DashboardProps) {
                     <StatCard icon={<CodeXml size={18} />} title="Sedang Dikerjakan" value="30" iconBgColor="bg-yellow-500" href='#' />
                     <StatCard icon={<Verified size={18} />} title="Sudah Diselesaikan" value="7" iconBgColor="bg-green-500" href='#' />
                 </div>
-
             </div>
         </AppLayout>
     );

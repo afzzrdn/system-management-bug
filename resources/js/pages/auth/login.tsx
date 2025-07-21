@@ -1,9 +1,9 @@
-import React, { FormEvent } from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
+import PasswordInput from '@/components/PasswordInput';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import PasswordInput from '@/components/PasswordInput';
+import { Head, Link, useForm } from '@inertiajs/react';
+import { FormEvent } from 'react';
 
 export default function Login() {
     const { data, setData, post, processing, errors } = useForm({
@@ -20,19 +20,19 @@ export default function Login() {
         <>
             <Head title="Log in" />
 
-            <div className="min-h-screen w-full grid grid-cols-1 lg:grid-cols-2 bg-white dark:bg-background">
-
-                <div className="flex items-center justify-center px-8 py-12 order-2 lg:order-1">
+            <div className="dark:bg-background grid min-h-screen w-full grid-cols-1 bg-white lg:grid-cols-2">
+                <div className="order-2 flex items-center justify-center px-8 py-12 lg:order-1">
                     <div className="w-full max-w-md space-y-6">
                         <div className="text-left">
-                            <h2 className="text-4xl font-bold">Selamat Datang Kembali</h2>
-                            <p className="mt-4 text-muted-foreground text-xl">
-                                Masukkan email dan password untuk masuk
-                            </p>
+                            <h2 className="text-3xl font-bold">Halo,</h2>
+                            <h2 className="text-3xl font-bold">Selamat Datang Kembali</h2>
+                            <p className="text-muted-foreground mt-4">Masukkan email dan password untuk masuk</p>
                         </div>
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div>
-                                <Label htmlFor="email" className="text-lg">Email</Label>
+                                <Label htmlFor="email" className="text-lg">
+                                    Email
+                                </Label>
                                 <Input
                                     id="email"
                                     type="email"
@@ -40,48 +40,35 @@ export default function Login() {
                                     required
                                     value={data.email}
                                     onChange={(e) => setData('email', e.target.value)}
-                                    className="w-full h-[50px]"
+                                    className="h-[50px] w-full"
                                 />
-                                {errors.email && <p className="mt-2 text-sm text-destructive">{errors.email}</p>}
+                                {errors.email && <p className="text-destructive mt-2 text-sm">{errors.email}</p>}
                             </div>
                             <div>
-                                <Label htmlFor="password" className="text-lg">Password</Label>
+                                <Label htmlFor="password" className="text-lg">
+                                    Password
+                                </Label>
                                 <PasswordInput
                                     id="password"
                                     required
                                     value={data.password}
                                     onChange={(e) => setData('password', e.target.value)}
                                     error={errors.password}
-                                    className="w-full h-[50px]"
+                                    className="h-[50px] w-full"
                                 />
                             </div>
-                            <Button
-                                variant="secondary"
-                                type="submit"
-                                className="w-full h-[55px] text-lg font-semibold"
-                                disabled={processing}
-                            >
+                            <Button variant="secondary" type="submit" className="h-[55px] w-full text-lg font-semibold" disabled={processing}>
                                 {processing ? 'Memproses...' : 'Masuk'}
                             </Button>
                         </form>
-                        <div className="text-center text-lg">
-                            Belum punya akun?{' '}
-                            <Link href={route('register')} className="underline font-semibold">
-                                Daftar di sini
-                            </Link>
-                        </div>
-                        <footer className="text-center text-sm text-muted-foreground opacity-70">
-                            © 2023 ALL RIGHTS RESERVED
-                        </footer>
                     </div>
                 </div>
 
-                <div className="order-1 lg:order-2">
-                    <img
-                        src="/img/default-avatar.gif"
-                        alt="Background"
-                        className="w-full h-[250px] lg:h-full object-cover rounded-b-3xl lg:rounded-b-none lg:rounded-r-3xl"
-                    />
+                <div className="flex flex-col gap-5 items-center justify-center bg-indigo-600 text-center text-2xl text-white">
+                    <p>Belum punya akun?</p>
+                    <Link href={route('register')} className="font-semibold border-2 bg-white text-indigo-600 border-white rounded-xl py-5 px-7">
+                        Daftar di sini
+                    </Link>
                 </div>
             </div>
         </>

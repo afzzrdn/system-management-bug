@@ -21,6 +21,8 @@ interface AppLayoutProps {
 const navItems = [
     { title: 'Dashboard', href: '/{role}/dashboard', roles: ['admin', 'client', 'developer'] },
     { title: 'User', href: '/admin/users', roles: ['admin'] },
+    { title: 'Bug', href: '/admin/bugs', roles: ['admin'] },
+    { title: 'Project', href: '/admin/project', roles: ['admin'] },
 ];
 
 export default function AppLayout({ children }: AppLayoutProps) {
@@ -67,7 +69,6 @@ export default function AppLayout({ children }: AppLayoutProps) {
                         {/* KANAN: Profil & Logout */}
                         <div className="w-1/3 flex justify-end items-center gap-3">
                             <Button
-                                onClick={handleLogout}
                                 className="flex items-center justify-center w-10 h-10 rounded-xl bg-white shadow-sm hover:bg-gray-200 transition"
                             >
                                 <Bell size={16} className="text-gray-700" />
