@@ -91,7 +91,7 @@ export default function Bugs() {
     return (
         
         <AppLayout>
-            <div className="p-8 space-y-6">
+            <div className="p-8 ">
             <Head>
                 <title>Manajemen Bug</title>
             </Head>

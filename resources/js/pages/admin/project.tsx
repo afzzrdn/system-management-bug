@@ -6,7 +6,6 @@ import ProjectDetailModal from '@/components/ProjectDetail';
 import ProjectTable from '@/components/ProjectTable';
 import ProjectFormModal from '@/components/FormProject';
 
-
 type Project = {
     id: number;
     name: string;
@@ -65,7 +64,6 @@ export default function ProjectIndex() {
         client_id: '',
     });
 
-    // --- MODAL & FORM HANDLERS ---
     const openModalForCreate = () => {
         reset();
         setEditingProjectId(null);
@@ -114,7 +112,7 @@ export default function ProjectIndex() {
             <Head title="Manajemen Project" />
 
             {/* Main Page Content */}
-            <div className="p-4 md:p-6 lg:p-8 max-w-full mx-auto">
+            <div className="p-8 max-w-full mx-auto">
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-bold text-gray-400">Manajemen Project</h2>
                     <button

@@ -113,7 +113,7 @@ console.log(projectsData);
       <Head title="Developer Dashboard" />
       <div className="p-4 md:p-6">
         <header className="flex flex-wrap justify-between items-center mb-8 gap-4">
-          <h2 className="text-2xl font-semibold text-gray-700">Developer Dashboard</h2>
+          <h2 className="text-2xl font-semibold text-gray-400">Developer Dashboard</h2>
         </header>
 
         <main className="grid grid-cols-1 lg:grid-cols-3 gap-8">
