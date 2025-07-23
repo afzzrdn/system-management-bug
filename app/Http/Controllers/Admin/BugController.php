@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Notification;
 use App\Models\Bug;
 use App\Models\Project;
 use App\Models\User;
@@ -34,8 +35,20 @@ class BugController extends Controller
             'resolved_at'  => 'nullable|date',
         ]);
 
-        Bug::create($data);
+        $bug = Bug::create($data);
 
+        if ($bug->assigned_to) {
+            Notification::create([
+                'user_id' => $bug->assigned_to,
+                'title' => 'Penugasan Bug Baru',
+                'message' => "Anda telah ditugaskan untuk menangani bug: \"{$bug->title}\". Silakan tinjau dan tangani sesuai prioritas yang ditentukan.",
+            ]);
+            Notification::create([
+                'user_id' => $bug->reported_by,
+                'title' => 'Laporan Bug Telah Dikirim',
+                'message' => "Laporan bug \"{$bug->title}\" Anda telah berhasil dikirim dan saat ini sedang ditindaklanjuti oleh tim pengembang.",
+            ]);
+        }
         return redirect()->route('bugs.index')->with('success', 'Bug created successfully.');
     }
 

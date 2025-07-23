@@ -70,7 +70,7 @@ export default function Bugs() {
         form.reset();
         setIsModalOpen(true);
     };
-    
+
     const openEditModal = (bug: Bug) => {
         setEditingBug(bug);
         form.setData({

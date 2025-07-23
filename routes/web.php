@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\BugController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
@@ -26,6 +27,12 @@ Route::middleware(['auth'])->group(function () {
             default     => abort(403),
         };
     })->name('dashboard');
+    Route::get('/notification', [NotificationController::class, 'index'])->name('notification.index');
+    Route::get('/notifications/unread-count', function () {
+        return response()->json([
+            'count' => \App\Models\Notification::where('user_id', auth()->id())->where('is_read', false)->count()
+        ]);
+    })->name('notifications.unread-count');
 });
 
 
@@ -58,13 +65,16 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
 // DEVELOPER ROUTES
 Route::middleware(['auth', 'role:developer'])->prefix('developer')->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Developer\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/bugs', fn () => Inertia::render('developer/bugs'))->name('developer.bug');
     // Tambah route developer lain di sini
 });
 
 // CLIENT ROUTES
 Route::middleware(['auth', 'role:client'])->prefix('client')->group(function () {
     Route::get('/dashboard', fn () => Inertia::render('client/dashboard'))->name('client.dashboard');
+    Route::get('/project', fn () => Inertia::render('client/project'))->name('client.project');
+    Route::get('/bug', fn () => Inertia::render('client/bug'))->name('client.bug');
     // Tambah route client lain di sini
 });
 
-require __DIR__.'/auth.php';
+require __DIR__.'/auth.php'; 

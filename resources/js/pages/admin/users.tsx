@@ -169,7 +169,7 @@ export default function Dashboard({ users, flash, filters }: DashboardProps) {
                 <title>Manajemen Pengguna</title>
             </Head>
 
-            <div className="p-4 md:p-6">
+            <div className="p-8">
                 <div className="flex justify-between items-baseline gap-4">
                     <h2 className="text-2xl font-semibold text-gray-400">Manajemen Pengguna</h2>
                     <div className="flex items-center  mb-6 gap-4">
