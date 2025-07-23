@@ -47,7 +47,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
     return (
         <div className="min-h-screen bg-gray-100 text-gray-900">
-            <header className="bg-white flex items-center px-10 py-4 border-b border-gray-200 justify-between">
+            <header className="flex items-center px-10 py-4 border-b border-gray-200 justify-between">
                 {user && (
                     <div className="flex items-center justify-between w-full">
                         <div className="w-1/3">
@@ -72,9 +72,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
                             </nav>
                         </div>
                         <div className="w-1/3 flex justify-end items-center gap-3">
-                            <button onClick={() => setIsChatOpen(true)} className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-white shadow-sm hover:bg-gray-200 transition">
+                            <Link href="/customer-service" className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-white shadow-sm hover:bg-gray-200 transition">
                                 <MessageSquare size={16} className="text-gray-700" />
-                            </button>
+                            </Link>
                             <Link href="/notification" className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-white shadow-sm hover:bg-gray-200 transition">
                                 <Bell size={16} className="text-gray-700" />
                                 {unreadCount > 0 && (
@@ -98,7 +98,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 )}
             </header>
 
-            <main className="p-5">
+            <main className="px-5">
                 {children}
             </main>
 

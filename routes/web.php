@@ -34,6 +34,7 @@ Route::middleware(['auth'])->group(function () {
             'count' => \App\Models\Notification::where('user_id', auth()->id())->where('is_read', false)->count()
         ]);
     })->name('notifications.unread-count');
+    Route::get('/customer-service',  fn () => Inertia::render('customer-service'))->name('customer-service.index');
 });
 
 
