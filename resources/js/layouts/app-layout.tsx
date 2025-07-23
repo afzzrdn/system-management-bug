@@ -28,7 +28,7 @@ const navItems = [
     { title: 'Bug', href: '/developer/bugs', roles: ['developer']},
 
     { title: 'Project', href: '/client/project', roles: ['client']},
-    { title: 'Lapor Bug', href: '/client/bug', roles: ['client']},
+    { title: 'Lapor Bug', href: '/client/bugs', roles: ['client']},
 
 
 ];

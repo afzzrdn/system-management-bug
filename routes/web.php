@@ -3,7 +3,8 @@
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ProjectController;
-use App\Http\Controllers\Admin\BugController;
+use App\Http\Controllers\Admin\BugController as AdminBugController;
+use App\Http\Controllers\Client\BugController as ClientBugController;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Redirect;
@@ -44,7 +45,7 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
     Route::resource('/users', UserController::class);
-    Route::resource('bugs', BugController::class)->names([
+    Route::resource('bugs', AdminBugController::class)->names([
         'index'   => 'bugs.index',
         'store'   => 'bugs.store',
         'update'  => 'bugs.update',
@@ -73,7 +74,14 @@ Route::middleware(['auth', 'role:developer'])->prefix('developer')->group(functi
 Route::middleware(['auth', 'role:client'])->prefix('client')->group(function () {
     Route::get('/dashboard', fn () => Inertia::render('client/dashboard'))->name('client.dashboard');
     Route::get('/project', fn () => Inertia::render('client/project'))->name('client.project');
-    Route::get('/bug', fn () => Inertia::render('client/bug'))->name('client.bug');
+    Route::resource('bugs', ClientBugController::class)->names([
+        'index'   => 'client.bugs.index',
+        'store'   => 'client.bugs.store',
+        'update'  => 'client.bugs.update',
+        'destroy' => 'client.bugs.destroy',
+    ])->parameters([
+        'bugs' => 'bug',
+    ]);
     // Tambah route client lain di sini
 });
 

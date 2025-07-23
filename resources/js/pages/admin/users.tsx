@@ -189,17 +189,6 @@ export default function Dashboard({ users, flash, filters }: DashboardProps) {
                   </div>
                 </div>
 
-                {flash.success && (
-                    <div className="mb-4 p-4 bg-green-100 text-green-800 border border-green-300 rounded-lg">
-                        {flash.success}
-                    </div>
-                )}
-                {flash.error && (
-                    <div className="mb-4 p-4 bg-red-100 text-red-800 border border-red-300 rounded-lg">
-                        {flash.error}
-                    </div>
-                )}
-
                 <div className="bg-white shadow-md rounded-lg overflow-x-auto">
                    <table className="min-w-full table-auto">
                         <thead className="bg-gray-50">

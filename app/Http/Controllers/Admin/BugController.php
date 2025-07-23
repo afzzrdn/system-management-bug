@@ -15,8 +15,13 @@ class BugController extends Controller
 {
     public function index(): Response
     {
+       $bugs = Bug::with(['project', 'reporter', 'assignee'])
+            ->where('reported_by', Auth::id())
+            ->latest()
+            ->get();
+
         return Inertia::render('admin/bugs', [
-            'bugs' => Bug::with(['project', 'reporter', 'assignee'])->latest()->get(),
+            'bugs' => $bugs,
             'projects' => Project::all(),
             'users' => User::all(),
         ]);
