@@ -27,7 +27,6 @@ class UserController extends Controller
                     $query->where('name', 'like', "%{$search}%")
                           ->orWhere('email', 'like', "%{$search}%");
                 })
-                // Menerapkan filter peran (role) jika ada
                 ->when($request->input('role'), function ($query, $role) {
                     $query->where('role', $role);
                 })
@@ -39,11 +38,10 @@ class UserController extends Controller
                     'email' => $user->email,
                     'role' => $user->role->value,
                 ]),
-            // Mengirim kembali nilai filter ke frontend
             'filters' => $request->only(['search', 'role']),
             'flash' => [
                 'success' => session('success'),
-                'error' => session('error'), // Menambahkan flash error
+                'error' => session('error'),
             ],
         ]);
     }
@@ -69,7 +67,6 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
-        // Menggunakan validated() untuk keamanan data
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
@@ -77,7 +74,6 @@ class UserController extends Controller
             'role' => ['required', new Enum(UserRole::class)],
         ]);
 
-        // Menangani pembaruan password secara terpisah
         if (!empty($data['password'])) {
             $data['password'] = Hash::make($data['password']);
         } else {

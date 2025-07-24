@@ -103,7 +103,7 @@ export default function Dashboard() {
     status: convertStatus(bug.status),
     taskTitle: `[${bug.priority.toUpperCase()}] ${bug.title}`,
     assignee: bug.assignee,
-     clientName: bug.reporter,
+    clientName: bug.reporter,
   }));
 console.log(projectsData);
 

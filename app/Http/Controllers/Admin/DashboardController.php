@@ -21,9 +21,6 @@ class DashboardController extends Controller
             'userCount' => $userCount,
             'bugCount' => $bugCount,
             'projectCount' => $projectCount
-            // Anda bisa menambahkan data lain untuk kartu statistik lainnya di sini
-            // 'expiringSoonCount' => ...
-            // 'needValidationCount' => ...
         ]);
     }
 }
