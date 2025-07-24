@@ -19,6 +19,7 @@ class DashboardController extends Controller
         $bugsFromClients = Bug::whereIn('reported_by', $clientIds)
             ->with(['project', 'reporter', 'assignee'])
             ->latest()
+            ->take(3)
             ->get();
 
         return Inertia::render('developer/dashboard', [

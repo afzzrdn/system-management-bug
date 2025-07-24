@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Notification;
 use App\Models\Bug;
 use App\Models\Project;
@@ -16,7 +17,6 @@ class BugController extends Controller
     public function index(): Response
     {
        $bugs = Bug::with(['project', 'reporter', 'assignee'])
-            ->where('reported_by', Auth::id())
             ->latest()
             ->get();
 
