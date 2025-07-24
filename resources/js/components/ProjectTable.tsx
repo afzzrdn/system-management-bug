@@ -21,18 +21,18 @@ export default function ProjectTable({ projects, onEdit, onDelete, onDetail }: P
       <table className="w-full table-auto">
         <thead className="bg-gray-50 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">
           <tr>
-            <th className="px-6 py-3">No</th>
-            <th className="px-6 py-3">Nama Project</th>
-            <th className="px-6 py-3">Client</th>
-            <th className="px-6 py-3">Aksi</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Project</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
           {projects.length > 0 ? projects.map((project, index) => (
             <tr key={project.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => onDetail(project)}>
-              <td className="px-6 py-4 text-gray-500">{index + 1}</td>
-              <td className="px-6 py-4 text-gray-900">{project.name}</td>
-              <td className="px-6 py-4 text-gray-500">{project.client?.name ?? 'N/A'}</td>
+              <td className="px-6 py-4 text-gray-500 text-sm">{index + 1}</td>
+              <td className="px-6 py-4 text-gray-800 text-sm">{project.name}</td>
+              <td className="px-6 py-4 text-gray-500 text-sm">{project.client?.name ?? 'N/A'}</td>
               <td className="px-6 py-4 space-x-4">
                 <button onClick={(e) => { e.stopPropagation(); onEdit(project); }} className="text-indigo-600 hover:text-indigo-900">
                   <Pencil size={18} />
