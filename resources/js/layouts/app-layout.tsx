@@ -2,8 +2,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import { usePage, Link, router } from '@inertiajs/react';
 import { Bell, LogOut, MessageSquare } from 'lucide-react';
 import { Button } from '@headlessui/react';
-import ChatPopup from '@/pages/client/components/CustomerChat';
-import { ChatMessage } from '@/types/chat'; 
+import { ChatMessage } from '@/types/chat';
 
 interface User {
     id: number;
@@ -102,16 +101,6 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 {children}
             </main>
 
-            {user && (
-                <ChatPopup
-                    show={isChatOpen}
-                    onClose={() => setIsChatOpen(false)}
-                    initialMessages={[]}
-                    ticketData={null}
-                    ticketImagePreview={null}
-                    userName={user.name}
-                />
-            )}
         </div>
     );
 }
