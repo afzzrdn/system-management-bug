@@ -1,11 +1,11 @@
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, User } from 'lucide-react';
 
 type Project = {
-    id: number;
-    name: string;
-    description: string | null;
-    client_id: number;
-    client?: { id: number; name: string };
+  id: number;
+  name: string;
+  description: string | null;
+  client_id: number;
+  client?: { id: number; name: string };
 };
 
 interface Props {
@@ -15,40 +15,60 @@ interface Props {
   onDetail: (project: Project) => void;
 }
 
-export default function ProjectTable({ projects, onEdit, onDelete, onDetail }: Props) {
+export default function ProjectCardGrid({ projects, onEdit, onDelete, onDetail }: Props) {
+  if (projects.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 bg-gray-50 rounded-lg shadow-inner">
+        <h3 className="text-xl font-semibold text-gray-700">Belum Ada Proyek</h3>
+        <p className="text-gray-500 mt-2">Silakan tambahkan proyek baru untuk memulai.</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-      <table className="w-full table-auto">
-        <thead className="bg-gray-50 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Project</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-200">
-          {projects.length > 0 ? projects.map((project, index) => (
-            <tr key={project.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => onDetail(project)}>
-              <td className="px-6 py-4 text-gray-500 text-sm">{index + 1}</td>
-              <td className="px-6 py-4 text-gray-800 text-sm">{project.name}</td>
-              <td className="px-6 py-4 text-gray-500 text-sm">{project.client?.name ?? 'N/A'}</td>
-              <td className="px-6 py-4 space-x-4">
-                <button onClick={(e) => { e.stopPropagation(); onEdit(project); }} className="text-indigo-600 hover:text-indigo-900">
-                  <Pencil size={18} />
-                </button>
-                <button onClick={(e) => { e.stopPropagation(); onDelete(project); }} className="text-red-600 hover:text-red-900">
-                  <Trash2 size={18} />
-                </button>
-              </td>
-            </tr>
-          )) : (
-            <tr>
-              <td colSpan={4} className="text-center p-8 text-gray-500">Belum ada project.</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      {projects.map((project) => (
+        <div
+          key={project.id}
+          className="bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 flex flex-col cursor-pointer group border border-gray-200"
+          onClick={() => onDetail(project)}
+        >
+          {/* Bagian Konten Utama */}
+          <div className="p-6 flex-grow">
+            <h3 className="text-lg font-bold text-gray-800 group-hover:text-indigo-600 transition-colors duration-300 truncate">
+              {project.name}
+            </h3>
+            <div className="flex items-center mt-2 text-sm text-gray-500">
+              <User size={16} className="mr-2 flex-shrink-0" />
+              <span className="truncate">{project.client?.name ?? 'N/A'}</span>
+            </div>
+          </div>
+
+          {/* Bagian Footer untuk Aksi */}
+          <div className="border-t border-gray-100 bg-gray-50/50 px-6 py-3 flex justify-end items-center space-x-3">
+            <button
+              onClick={(e) => {
+                e.stopPropagation(); // Mencegah trigger onDetail pada card
+                onEdit(project);
+              }}
+              className="text-gray-500 hover:text-indigo-600 transition-colors duration-200"
+              title="Edit Project"
+            >
+              <Pencil size={18} />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation(); // Mencegah trigger onDetail pada card
+                onDelete(project);
+              }}
+              className="text-gray-500 hover:text-red-600 transition-colors duration-200"
+              title="Delete Project"
+            >
+              <Trash2 size={18} />
+            </button>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

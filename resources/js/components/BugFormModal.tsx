@@ -45,7 +45,6 @@ interface BugFormModalProps {
 export default function BugFormModal({ isOpen, onClose, onSubmit, isEditing, form, projects, users }: BugFormModalProps) {
 
   const [step, setStep] = useState(1);
-  // 1. State untuk menyimpan error validasi di frontend
   const [frontEndErrors, setFrontEndErrors] = useState<FrontEndErrors>({});
 
   if (!form) {
@@ -54,11 +53,10 @@ export default function BugFormModal({ isOpen, onClose, onSubmit, isEditing, for
 
   const handleClose = () => {
     setStep(1);
-    setFrontEndErrors({}); // Bersihkan error saat modal ditutup
+    setFrontEndErrors({}); 
     onClose();
   };
-
-  // 2. Fungsi untuk validasi sebelum melanjutkan ke langkah 2
+ 2
   const handleNextStep = () => {
     const errors: FrontEndErrors = {};
     if (!form.data.title.trim()) errors.title = 'Judul wajib diisi.';
@@ -190,7 +188,7 @@ export default function BugFormModal({ isOpen, onClose, onSubmit, isEditing, for
                     </div>
                   )}
                   
-                  <div className="pt-5 flex justify-end gap-3">
+                  <div className="pt-5 flex justify-end gap-3 text-sm">
                     {step === 1 && (
                       <>
                         <button type="button" onClick={handleClose} className="px-6 py-3 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 font-medium">Batal</button>
