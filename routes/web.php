@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\BugController as AdminBugController;
 use App\Http\Controllers\Client\BugController as ClientBugController;
+use App\Http\Controllers\Developer\DashboardController as DeveloperBugController;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Redirect;
@@ -66,7 +67,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
 
 // DEVELOPER ROUTES
 Route::middleware(['auth', 'role:developer'])->prefix('developer')->group(function () {
-    Route::get('/dashboard', [\App\Http\Controllers\Developer\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DeveloperBugController::class, 'index'])->name('dashboard');
     Route::get('/bugs', fn () => Inertia::render('developer/bugs'))->name('developer.bug');
     // Tambah route developer lain di sini
 });
@@ -74,7 +75,7 @@ Route::middleware(['auth', 'role:developer'])->prefix('developer')->group(functi
 // CLIENT ROUTES
 Route::middleware(['auth', 'role:client'])->prefix('client')->group(function () {
     Route::get('/dashboard', fn () => Inertia::render('client/dashboard'))->name('client.dashboard');
-    Route::get('/project', fn () => Inertia::render('client/project'))->name('client.project');
+    Route::get('/project', [\App\Http\Controllers\Client\ProjectController::class, 'index'])->name('client.project');
     Route::resource('bugs', ClientBugController::class)->names([
         'index'   => 'client.bugs.index',
         'store'   => 'client.bugs.store',
@@ -86,4 +87,4 @@ Route::middleware(['auth', 'role:client'])->prefix('client')->group(function () 
     // Tambah route client lain di sini
 });
 
-require __DIR__.'/auth.php'; 
+require __DIR__.'/auth.php';

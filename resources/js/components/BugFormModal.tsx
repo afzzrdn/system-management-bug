@@ -1,5 +1,5 @@
 import { Dialog, Transition } from '@headlessui/react';
-import { Fragment, useState } from 'react';
+import { Fragment, useState, useEffect } from 'react';
 
 // --- Helper Komponen untuk Ikon Centang ---
 const CheckIcon = () => (
@@ -10,7 +10,7 @@ const CheckIcon = () => (
 
 
 type Project = { id: number; name: string };
-type User = { id: number; name: string };
+type User = { id: number; name: string ; role: 'developer' | 'client' | 'admin' };
 
 type BugFormData = {
   title: string;
@@ -45,7 +45,13 @@ interface BugFormModalProps {
 export default function BugFormModal({ isOpen, onClose, onSubmit, isEditing, form, projects, users }: BugFormModalProps) {
 
   const [step, setStep] = useState(1);
-  // 1. State untuk menyimpan error validasi di frontend
+
+   useEffect(() => {
+    if (isOpen) {
+      setStep(1);
+    }
+  }, [isOpen]);
+
   const [frontEndErrors, setFrontEndErrors] = useState<FrontEndErrors>({});
 
   if (!form) {
@@ -71,7 +77,7 @@ export default function BugFormModal({ isOpen, onClose, onSubmit, isEditing, for
       setStep(2);
     }
   };
-  
+
   // Fungsi untuk update data sekaligus membersihkan error frontend
   const setDataAndClearError = (field: keyof BugFormData, value: any) => {
     form.setData(field, value);
@@ -111,7 +117,7 @@ export default function BugFormModal({ isOpen, onClose, onSubmit, isEditing, for
           <div className="flex min-h-full items-center justify-center p-4 text-center">
             <Transition.Child as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100" leave="ease-in duration-200" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95">
               <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white p-8 text-left align-middle shadow-xl transition-all">
-                
+
                 <div className="w-full max-w-md mx-auto mb-8">
                   <div className="flex items-center">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white transition-colors duration-300 ${step >= 1 ? 'bg-indigo-600' : 'bg-gray-300'}`}>
@@ -153,11 +159,11 @@ export default function BugFormModal({ isOpen, onClose, onSubmit, isEditing, for
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700">Dilaporkan oleh</label>
-                          <select value={form.data.reported_by} onChange={e => form.setData('reported_by', e.target.value)} className="mt-2 p-3 block w-full rounded-md border-gray-300 shadow-sm focus:outline-none sm:text-sm"><option value="">Pilih User</option>{users.map(u => (<option key={u.id} value={u.id}>{u.name}</option>))}</select>
+                          <select value={form.data.reported_by} onChange={e => form.setData('reported_by', e.target.value)} className="mt-2 p-3 block w-full rounded-md border-gray-300 shadow-sm focus:outline-none sm:text-sm"><option value="">Pilih User</option>{users.filter(u => u.role !== 'developer').map(u => (<option key={u.id} value={u.id}>{u.name}</option>))}</select>
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700">Ditugaskan ke</label>
-                          <select value={form.data.assigned_to} onChange={e => form.setData('assigned_to', e.target.value)} className="mt-2 p-3 block w-full rounded-md border-gray-300 shadow-sm focus:outline-none sm:text-sm"><option value="">Pilih User</option>{users.map(u => (<option key={u.id} value={u.id}>{u.name}</option>))}</select>
+                          <select value={form.data.assigned_to} onChange={e => form.setData('assigned_to', e.target.value)} className="mt-2 p-3 block w-full rounded-md border-gray-300 shadow-sm focus:outline-none sm:text-sm"><option value="">Pilih User</option>{users.filter(u => u.role === 'developer').map(u => (<option key={u.id} value={u.id}>{u.name}</option>))}</select>
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700">Tgl. Selesai</label>
@@ -189,7 +195,7 @@ export default function BugFormModal({ isOpen, onClose, onSubmit, isEditing, for
                       {form.errors.attachment && <p className="text-red-500 text-xs mt-1">{form.errors.attachment}</p>}
                     </div>
                   )}
-                  
+
                   <div className="pt-5 flex justify-end gap-3">
                     {step === 1 && (
                       <>

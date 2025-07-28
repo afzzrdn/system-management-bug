@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Support\Facades\Storage;
 
 class BugController extends Controller
 {
@@ -51,6 +52,7 @@ class BugController extends Controller
             $bug->attachments()->create([
                 'file_path' => $path,
                 'file_name' => $file->getClientOriginalName(),
+                'uploaded_by' => Auth::id(),
             ]);
         }
 
@@ -88,21 +90,34 @@ class BugController extends Controller
         $bug->update($data);
 
         if ($request->hasFile('attachment')) {
-            $file = $request->file('attachment');
-            $path = $file->store('attachments', 'public');
-
-            $bug->attachments()->create([
-                'file_path' => $path,
-                'file_name' => $file->getClientOriginalName(),
-            ]);
+        foreach ($bug->attachments as $attachment) {
+            if (Storage::disk('public')->exists($attachment->file_path)) {
+                Storage::disk('public')->delete($attachment->file_path);
+            }
+            $attachment->delete();
         }
 
-        return redirect()->route('bugs.index')->with('success', 'Bug updated successfully.');
+        $file = $request->file('attachment');
+        $path = $file->store('attachments', 'public');
+
+        $bug->attachments()->create([
+            'file_path'   => $path,
+            'file_name'   => $file->getClientOriginalName(),
+            'uploaded_by' => Auth::id(),
+        ]);
     }
+
+    return redirect()->route('bugs.index')->with('success', 'Bug updated successfully.');
+}
 
 
     public function destroy(Bug $bug)
     {
+        foreach ($bug->attachments as $attachment) {
+        if (Storage::disk('public')->exists($attachment->file_path)) {
+            Storage::disk('public')->delete($attachment->file_path);
+        }
+    }
         $bug->delete();
 
         return redirect()->route('bugs.index')->with('success', 'Bug deleted successfully.');

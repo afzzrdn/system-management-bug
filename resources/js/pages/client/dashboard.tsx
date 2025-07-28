@@ -182,46 +182,6 @@ export default function Dashboard({ auth, stats, recentBugs = [], devLogs = [], 
                             </ul>
                         )}
                     </div>
-                    
-                    <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-                        <h4 className="mb-5 text-xl font-bold text-gray-800">Service Progress</h4>
-                        {serviceProgress.length === 0 ? (
-                            <div className="py-8 text-center text-gray-500">
-                                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
-                                    <span className="text-gray-400">📊</span>
-                                </div>
-                                <h3 className="mt-2 text-sm font-medium">No active services</h3>
-                                <p className="mt-1 text-sm">Service progress will appear here</p>
-                            </div>
-                        ) : (
-                            <ul className="space-y-6">
-                                {serviceProgress.map((service) => {
-                                    const progressColor =
-                                        service.progress === 100 ? 'bg-green-500' : service.progress > 50 ? 'bg-blue-500' : 'bg-yellow-500';
-                                    const statusColor =
-                                        service.progress === 100 ? 'text-green-500' : service.progress > 50 ? 'text-blue-500' : 'text-yellow-500';
-                                    return (
-                                        <li key={service.id}>
-                                            <div className="mb-2 flex justify-between">
-                                                <span className="font-medium text-gray-700">{service.title}</span>
-                                                <span className="font-medium">{service.progress}%</span>
-                                            </div>
-                                            <div className="h-2.5 w-full rounded-full bg-gray-200">
-                                                <div
-                                                    className={`h-2.5 rounded-full ${progressColor}`}
-                                                    style={{ width: `${service.progress}%` }}
-                                                ></div>
-                                            </div>
-                                            <div className="mt-2 flex justify-between">
-                                                <span className="text-sm text-gray-500">Assigned to: {service.assignee}</span>
-                                                <span className={`text-sm font-medium ${statusColor}`}>{service.status}</span>
-                                            </div>
-                                        </li>
-                                    );
-                                })}
-                            </ul>
-                        )}
-                    </div>
                 </div>
             </div>
         </AppLayout>

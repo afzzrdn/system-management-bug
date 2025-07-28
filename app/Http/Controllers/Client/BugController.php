@@ -8,6 +8,7 @@ use App\Models\Project;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use Illuminate\Http\Request;
 
 class BugController extends Controller
 {
@@ -24,6 +25,29 @@ class BugController extends Controller
             'users' => User::all(),
         ]);
     }
+    public function store(Request $request)
+{
+    $validated = $request->validate([
+        'title' => 'required|string|max:255',
+        'project_id' => 'required|exists:projects,id',
+        'priority' => 'required|in:low,medium,high,critical',
+        'description' => 'nullable|string',
+        'attachments.*' => 'nullable|file|mimes:jpg,jpeg,png|max:2048'
+    ]);
 
-    // Tambahkan store, update, destroy jika perlu
+    $validated['reported_by'] = Auth::id();
+    $validated['status'] = 'open';
+
+    $bug = Bug::create($validated);
+
+    if ($request->hasFile('attachments')) {
+        foreach ($request->file('attachments') as $file) {
+            $path = $file->store('bug_attachments', 'public');
+            $bug->attachments()->create(['file_path' => $path]);
+        }
+    }
+
+    return redirect()->route('client.bugs.index')->with('success', 'Bug berhasil dilaporkan.');
+}
+
 }
