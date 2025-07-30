@@ -1,20 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, usePage, Link } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
+import axios from 'axios';
 import { Search, ClipboardList, Loader, CheckCircle } from 'lucide-react';
-
-type Project = { id: number; name: string; };
-type User = { id: number; name: string; };
-
-type Bug = {
-    id: number;
-    title: string;
-    description: string;
-    priority: 'low' | 'medium' | 'high' | 'critical';
-    status: 'open' | 'in_progress' | 'resolved' | 'closed';
-    project: Project;
-    reporter: User;
-};
+import BugDetail from '@/components/BugDetail';
+import type { Bug } from '@/types/bug';
 
 type PageProps = {
     bugs?: Bug[];
@@ -43,7 +33,26 @@ type StatusFilter = 'all' | 'open' | 'in_progress' | 'resolved';
 
 export default function DeveloperBugsPage() {
     const { bugs: bugsFromProps, stats: statsFromProps } = usePage<PageProps>().props;
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+    const [selectedBug, setSelectedBug] = useState<Bug | null>(null);
     const [selectedStatus, setSelectedStatus] = useState<StatusFilter>('all');
+    const [loadingDetail, setLoadingDetail] = useState(false);
+
+    const openDetailModal = async (bugId: number) => {
+    setLoadingDetail(true);
+    try {
+        const { data } = await axios.get(`/developer/bugs/${bugId}`);
+        setSelectedBug(data.bug);
+        setIsDetailModalOpen(true);
+    } finally {
+        setLoadingDetail(false);
+    }
+    };
+    
+    const closeDetailModal = () => {
+        setIsDetailModalOpen(false);
+        setSelectedBug(null);
+    };
     
     const bugs = bugsFromProps || [];
     const stats = statsFromProps || { assigned: 0, in_progress: 0, resolved: 0 };
@@ -56,10 +65,10 @@ export default function DeveloperBugsPage() {
     }, [bugs, selectedStatus]);
 
     const filterButtons: { label: string; value: StatusFilter }[] = [
-        { label: 'Semua', value: 'all' },
-        { label: 'Ditugaskan', value: 'open' },
-        { label: 'Dikerjakan', value: 'in_progress' },
-        { label: 'Selesai', value: 'resolved' },
+        { label: 'All', value: 'all' },
+        { label: 'Open', value: 'open' },
+        { label: 'Progress', value: 'in_progress' },
+        { label: 'Resolved', value: 'resolved' },
     ];
 
     return (
@@ -144,7 +153,10 @@ export default function DeveloperBugsPage() {
                                             <span className={`px-2 py-1 text-xs font-semibold rounded-full ${statusStyles[bug.status]}`}>{bug.status.replace('_', ' ')}</span>
                                         </td>
                                         <td className="p-4">
-                                            <button className="text-indigo-600 hover:underline font-semibold">Lihat Detail</button>
+                                            <button onClick={() => openDetailModal(bug.id)} className="text-indigo-600 hover:underline font-semibold">
+                                            Lihat Detail
+                                        </button>
+
                                         </td>
                                     </tr>
                                 )) : (
@@ -157,6 +169,11 @@ export default function DeveloperBugsPage() {
                     </div>
                 </div>
             </div>
+            <BugDetail
+                isOpen={isDetailModalOpen}
+                onClose={closeDetailModal}
+                bug={selectedBug}
+            />
         </AppLayout>
     );
 }

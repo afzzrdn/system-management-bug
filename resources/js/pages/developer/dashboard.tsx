@@ -127,11 +127,10 @@ console.log(projectsData);
 
             <div className="w-full h-[300px] bg-white rounded-xl shadow-sm p-4">
               <h3 className="font-semibold text-gray-600">Developer Chart</h3>
-              {/* (Opsional: Tambahkan grafik/statistik di sini pakai Recharts atau Chart.js) */}
+
             </div>
           </section>
 
-          {/* Aktivitas Terbaru */}
           <section>
             <h3 className="text-xl font-semibold text-gray-600 mb-4">Aktivitas Terbaru</h3>
             <div className="space-y-4">

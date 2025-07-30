@@ -2,13 +2,9 @@ import React, { useState } from 'react';
 import { Head, usePage } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import ProjectDetail from '@/components/ProjectDetail';
-
-type Project = {
-    id: number;
-    name: string;
-    description: string | null;
-    client?: { id: number; name: string };
-};
+import type { Bug } from '@/types/bugs';
+import type { Project } from '@/types/project';
+import axios from 'axios';
 
 type PageProps = {
     projects?: Project[];
@@ -19,6 +15,20 @@ export default function ClientProjectsPage() {
     const projects = projectsFromProps || [];
 
     const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+    const [loading, setLoading] = useState(false);
+
+    const openProjectDetail = async (projectId: number) => {
+        setLoading(true);
+        try {
+            const { data } = await axios.get(`/client/project/${projectId}`);
+            setSelectedProject(data.project);
+        } catch (err) {
+            console.error(err);
+            alert('Gagal memuat detail project');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <AppLayout>
@@ -44,10 +54,10 @@ export default function ClientProjectsPage() {
                                         <td className="p-4 text-gray-700 truncate max-w-xs">{project.description}</td>
                                         <td className="p-4">
                                             <button
-                                                onClick={() => setSelectedProject(project)}
+                                                onClick={() => openProjectDetail(project.id)}
                                                 className="text-indigo-600 hover:underline font-semibold"
                                             >
-                                                Lihat Detail
+                                                {loading ? 'Memuat...' : 'Lihat Detail'}
                                             </button>
                                         </td>
                                     </tr>

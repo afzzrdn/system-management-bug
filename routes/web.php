@@ -5,7 +5,8 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\BugController as AdminBugController;
 use App\Http\Controllers\Client\BugController as ClientBugController;
-use App\Http\Controllers\Developer\DashboardController as DeveloperBugController;
+use App\Http\Controllers\Developer\DashboardController as DeveloperDashboardController;
+use App\Http\Controllers\Developer\BugController as DeveloperBugController;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Redirect;
@@ -67,15 +68,18 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
 
 // DEVELOPER ROUTES
 Route::middleware(['auth', 'role:developer'])->prefix('developer')->group(function () {
-    Route::get('/dashboard', [DeveloperBugController::class, 'index'])->name('dashboard');
-    Route::get('/bugs', fn () => Inertia::render('developer/bugs'))->name('developer.bug');
-    // Tambah route developer lain di sini
+    Route::get('/dashboard', [DeveloperDashboardController::class, 'index'])->name('dashboard');
+     Route::get('/bugs', [DeveloperBugController::class, 'index'])->name('developer.bugs.index');
+     Route::get('/bugs/{bug}', [DeveloperBugController::class, 'show'])->name('developer.bugs.show');
+
 });
 
 // CLIENT ROUTES
+// CLIENT ROUTES
 Route::middleware(['auth', 'role:client'])->prefix('client')->group(function () {
-    Route::get('/dashboard', fn () => Inertia::render('client/dashboard'))->name('client.dashboard');
+    Route::get('/dashboard', [\App\Http\Controllers\Client\DashboardController::class, 'index'])->name('client.dashboard');
     Route::get('/project', [\App\Http\Controllers\Client\ProjectController::class, 'index'])->name('client.project');
+    Route::get('/project/{project}', [\App\Http\Controllers\Client\ProjectController::class, 'show'])->name('client.project.show');
     Route::resource('bugs', ClientBugController::class)->names([
         'index'   => 'client.bugs.index',
         'store'   => 'client.bugs.store',
@@ -84,7 +88,7 @@ Route::middleware(['auth', 'role:client'])->prefix('client')->group(function () 
     ])->parameters([
         'bugs' => 'bug',
     ]);
-    // Tambah route client lain di sini
 });
+
 
 require __DIR__.'/auth.php';

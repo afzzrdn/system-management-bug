@@ -1,141 +1,165 @@
-import React, { useEffect, useState } from 'react';
-import { usePage, Head, useForm } from '@inertiajs/react';
+import React, { useState } from 'react';
+import { useForm, usePage, router, Head } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
+import BugFormModal from '@/components/BugReportModal';
 
-type BugFormData = {
-  title: string;
-  project_id: string;
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  description: string;
-  attachments: File[] | null;
+// --- TYPE DEFINITIONS ---
+type Project = { id: number; name: string; };
+type User = { id: number; name: string; role: 'developer' | 'client' | 'admin'; };
+type Attachment = { id: number; file_path: string; file_name: string; };
+type Bug = {
+    id: number;
+    title: string;
+    description: string;
+    priority: 'low' | 'medium' | 'high' | 'critical';
+    status: 'open' | 'in_progress' | 'resolved' | 'closed';
+    project_id: number;
+    reported_by: number;
+    assigned_to?: number | null;
+    resolved_at?: string | null;
+    project?: Project;
+    reporter?: User;
+    assignee?: User;
+    attachments?: Attachment[];
+};
+type PageProps = { bugs: Bug[]; projects: Project[]; users: User[]; };
+
+// --- FORM DATA TYPE ---
+export type BugFormData = {
+    title: string;
+    description: string;
+    priority: 'low' | 'medium' | 'high' | 'critical';
+    status: 'open' | 'in_progress' | 'resolved' | 'closed';
+    attachments: File[];
+    project_id: string;
+    assigned_to: string;
+
 };
 
-type Project = {
-  id: number;
-  name: string;
-};
+export default function Bugs() {
+    const { bugs = [], projects = [], users = [] } = usePage<PageProps>().props;
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingBug, setEditingBug] = useState<Bug | null>(null);
 
-type PageProps = {
-  auth: { user: { name: string } };
-  projects: Project[];
-};
+    const initialFormValues: BugFormData = {
+        title: '',
+        description: '',
+        priority: 'low',
+        status: 'open',
+        attachments: [],
+        project_id: '',
+        assigned_to: '',
+    };
 
-export default function LaporBug() {
-  const { auth, projects } = usePage<PageProps>().props;
+    const { data, setData, post, processing, errors, reset, transform } = useForm(initialFormValues);
+    const isEditing = editingBug !== null;
 
-  const { data, setData, post, processing, errors, reset } = useForm<BugFormData>({
-    title: '',
-    project_id: '',
-    priority: 'low',
-    description: '',
-    attachments: null,
-  });
+    // --- HELPER OBJECTS FOR STYLING ---
+    const priorityClasses = {
+        low: 'bg-blue-100 text-blue-800 ring-1 ring-inset ring-blue-200',
+        medium: 'bg-yellow-100 text-yellow-800 ring-1 ring-inset ring-yellow-200',
+        high: 'bg-orange-100 text-orange-800 ring-1 ring-inset ring-orange-200',
+        critical: 'bg-red-100 text-red-800 ring-1 ring-inset ring-red-200',
+    };
+    const statusInfo = {
+        open: { text: 'Open', class: 'text-blue-600 bg-blue-100' },
+        in_progress: { text: 'In Progress', class: 'text-yellow-600 bg-yellow-100' },
+        resolved: { text: 'Resolved', class: 'text-green-600 bg-green-100' },
+        closed: { text: 'Closed', class: 'text-gray-600 bg-gray-100' },
+    };
 
-  const [imagePreview, setImagePreview] = useState<string[]>([]);
-
-  // Preview gambar
-  useEffect(() => {
-    if (data.attachments && data.attachments.length > 0) {
-      const previews: string[] = [];
-      Array.from(data.attachments).forEach(file => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          previews.push(reader.result as string);
-          if (previews.length === data.attachments!.length) {
-            setImagePreview(previews);
-          }
-        };
-        reader.readAsDataURL(file);
-      });
-    } else {
-      setImagePreview([]);
-    }
-  }, [data.attachments]);
-
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    post(route('client.bugs.store'), {
-      onSuccess: () => {
+    // --- MODAL & FORM HANDLERS ---
+    const openAddModal = () => {
+        setEditingBug(null);
         reset();
-        setImagePreview([]);
-      },
-    });
-  };
+        setIsModalOpen(true);
+    };
 
-  return (
-    <AppLayout>
-      <Head>
-        <title>Lapor Bug</title>
-      </Head>
-      <div className="py-12 bg-gray-50 rounded-xl shadow-lg">
-        <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
-          <div className="bg-white p-7 rounded-xl shadow-lg">
-            <div className="text-center mb-8">
-              <h3 className="text-2xl font-bold text-gray-800">Bug Service Ticket</h3>
-              <p className="text-gray-600 mt-2">Silakan isi detail bug yang Anda temukan.</p>
+    const closeModal = () => {
+        setIsModalOpen(false);
+        setEditingBug(null);
+        reset();
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const onFinish = () => closeModal();
+
+    transform((data) => ({
+        ...data,
+        description: data.description || '-',
+        priority: data.priority || 'low',
+        status: data.status || 'open',
+        assigned_to: data.assigned_to || '',
+        ...(isEditing ? { _method: 'put' } : {}),
+    }));
+
+    if (isEditing) {
+        post(route('client.bugs.update', editingBug!.id), { onSuccess: onFinish, forceFormData: true });
+    } else {
+        post(route('client.bugs.store'), { onSuccess: onFinish, forceFormData: true });
+    }
+};
+
+
+    const handleDelete = (id: number) => {
+        if (confirm('Yakin ingin menghapus bug ini?')) {
+            router.delete(route('bugs.destroy', id), { preserveScroll: true });
+        }
+    };
+
+    return (
+        <AppLayout>
+            <Head><title>Manajemen Bug</title></Head>
+            <div className="p-4 sm:p-6 md:p-8 space-y-6">
+                <div className="flex justify-between items-center">
+                    <h1 className="text-2xl font-bold text-slate-800">Manajemen Bug</h1>
+                    <button onClick={openAddModal} className="inline-flex items-center justify-center gap-x-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" /></svg>
+                        <span>Tambah Laporan Bug</span>
+                    </button>
+                </div>
+
+                <div className="overflow-x-auto bg-white rounded-xl shadow">
+                    <table className="w-full text-sm text-left text-gray-500 border border-gray-200">
+                        <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                            <tr>
+                                <th scope="col" className="px-6 py-3">Judul</th>
+                                <th scope="col" className="px-6 py-3">Project</th>
+                                <th scope="col" className="px-6 py-3">Prioritas</th>
+                                <th scope="col" className="px-6 py-3">Status</th>
+                                <th scope="col" className="px-6 py-3">Ditugaskan ke</th>
+                                <th scope="col" className="px-6 py-3">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {bugs.length > 0 ? (
+                                bugs.map((bug) => (
+                                    <tr key={bug.id} className="bg-white border-b hover:bg-gray-50">
+                                        <td className="px-6 py-4 font-medium text-gray-900">{bug.title}</td>
+                                        <td className="px-6 py-4">{bug.project?.name ?? 'N/A'}</td>
+                                        <td className="px-6 py-4"><span className={`px-2.5 py-1 text-xs font-semibold rounded-full capitalize whitespace-nowrap ${priorityClasses[bug.priority]}`}>{bug.priority}</span></td>
+                                        <td className="px-6 py-4"><span className={`px-2 py-0.5 text-xs font-medium rounded-md ${statusInfo[bug.status].class}`}>{statusInfo[bug.status].text}</span></td>
+                                        <td className="px-6 py-4">{bug.assignee?.name ?? 'Belum ada'}</td>
+                                        <td className="px-6 py-4 flex items-center space-x-3">
+                                            <button onClick={() => handleDelete(bug.id)} className="font-medium text-red-600 hover:underline">Hapus</button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={6} className="text-center p-12 bg-white border-b">
+                                        <h3 className="text-xl font-semibold text-slate-800">Tidak Ada Bug Ditemukan</h3>
+                                        <p className="mt-2 text-sm text-slate-500">Mulai lacak bug dengan mengeklik tombol "Tambah Laporan Bug".</p>
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                <BugFormModal isOpen={isModalOpen} onClose={closeModal} onSubmit={handleSubmit} isEditing={isEditing} form={{ data, setData, errors, processing }} projects={projects} users={users} editingBug={editingBug} />
             </div>
-
-            <form onSubmit={handleFormSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Judul Bug</label>
-                  <input type="text" placeholder="Masukkan judul bug" value={data.title} onChange={e => setData('title', e.target.value)} className="w-full p-3 border border-gray-300 rounded-lg" />
-                  {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Project</label>
-                  <select value={data.project_id} onChange={e => setData('project_id', e.target.value)} className="w-full p-3 border border-gray-300 rounded-lg">
-                    <option value="">Pilih Project</option>
-                    {projects.map(p => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
-                  </select>
-                  {errors.project_id && <p className="text-red-500 text-sm mt-1">{errors.project_id}</p>}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Prioritas</label>
-                  <select value={data.priority} onChange={e => setData('priority', e.target.value as any)} className="w-full p-3 border border-gray-300 rounded-lg">
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                    <option value="critical">Critical</option>
-                  </select>
-                  {errors.priority && <p className="text-red-500 text-sm mt-1">{errors.priority}</p>}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Upload Screenshot (opsional)</label>
-                <div className="flex items-center">
-                  <label htmlFor="attachments" className="text-sm inline-block bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 px-5 rounded-lg cursor-pointer transition-colors">Choose Files</label>
-                  <span className="ml-3 text-gray-500 text-sm">{data.attachments ? `${data.attachments.length} file dipilih` : 'No files chosen'}</span>
-                </div>
-                <input id="attachments" type="file" multiple accept="image/*" onChange={e => setData('attachments', e.target.files ? Array.from(e.target.files) : null)} className="hidden" />
-                {errors.attachments && <p className="text-red-500 text-sm mt-1">{errors.attachments}</p>}
-                {imagePreview.length > 0 && (
-                  <div className="mt-4 flex flex-wrap gap-3">
-                    {imagePreview.map((src, idx) => (
-                      <img key={idx} src={src} alt="Preview" className="w-24 h-24 object-cover rounded-md border p-1" />
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Deskripsi Masalah</label>
-                <textarea rows={5} placeholder="Ceritakan detail bug yang Anda alami..." value={data.description} onChange={e => setData('description', e.target.value)} className="w-full p-3 border border-gray-300 rounded-lg"></textarea>
-                {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
-              </div>
-
-              <div className="flex justify-end pt-4">
-                <button type="submit" disabled={processing} className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50">
-                  {processing ? 'Mengirim...' : 'Kirim Laporan'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </AppLayout>
-  );
+        </AppLayout>
+    );
 }
