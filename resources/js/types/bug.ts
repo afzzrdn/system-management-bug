@@ -9,6 +9,7 @@ export type Bug = {
     status: 'open' | 'in_progress' | 'resolved' | 'closed';
     project: Project;
     reporter: User;
+    assignee?: User | null;
     attachments?: Attachment[];
     version: string;
 };

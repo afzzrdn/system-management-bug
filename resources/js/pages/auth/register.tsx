@@ -9,6 +9,7 @@ export default function Register() {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         email: '',
+        phone: '',
         password: '',
         password_confirmation: '',
     });
@@ -54,6 +55,19 @@ export default function Register() {
                                     className="h-12 mt-1"
                                 />
                                 {errors.email && <p className="text-red-500 mt-2 text-sm">{errors.email}</p>}
+                            </div>
+                            <div>
+                                <Label htmlFor="phone">WhatsApp Number</Label>
+                                <Input
+                                    id="phone"
+                                    type="text"
+                                    placeholder="628xxxxxxxxxx"
+                                    required
+                                    value={data.phone}
+                                    onChange={(e) => setData('phone', e.target.value)}
+                                    className="h-12 mt-1"
+                                />
+                                {errors.phone && <p className="text-red-500 mt-2 text-sm">{errors.phone}</p>}
                             </div>
                             <div>
                                 <Label htmlFor="password">Password</Label>

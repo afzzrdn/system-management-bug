@@ -5,48 +5,49 @@ namespace App\Http\Controllers\Client;
 use App\Http\Controllers\Controller;
 use App\Models\Bug;
 use App\Models\Project;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $userId = Auth::id();
+        $user = Auth::user();
+        $projectIds = Project::where('client_id', $user->id)->pluck('id');
 
-        // Statistik
-        $bugReported = Bug::where('reported_by', $userId)->count();
-        $bugFixed = Bug::where('reported_by', $userId)->where('status', 'resolved')->count();
-        $activeProjects = Project::where('client_id', $userId)->count();
+        $stats = [
+            'bugReported' => Bug::whereIn('project_id', $projectIds)->count(),
+            'bugFixed' => Bug::whereIn('project_id', $projectIds)->where('status', 'resolved')->count(),
+            'activeProjects' => $projectIds->count(),
+        ];
 
-        // Bug terbaru (limit 5)
-        $recentBugs = Bug::where('reported_by', $userId)
-            ->with('project:id,name')
+        $recentBugs = Bug::with('project:id,name')
+            ->whereIn('project_id', $projectIds)
             ->latest()
             ->take(5)
             ->get()
-            ->map(function ($bug) {
-                return [
-                    'id' => $bug->id,
-                    'title' => $bug->title,
-                    'project' => $bug->project->name ?? 'N/A',
-                    'status' => $bug->status,
-                ];
-            });
+            ->map(fn ($bug) => [
+                'id' => $bug->id,
+                'title' => $bug->title,
+                'project' => $bug->project->name,
+                'status' => $bug->status,
+                'full_bug' => $bug->load('reporter', 'assignee', 'attachments'),
+            ]);
 
-        // Development log (sementara dummy, bisa diambil dari tabel log kalau ada)
-        $devLogs = [
-            ['id' => 1, 'title' => 'Bug Fix v1.0.1', 'description' => 'Perbaikan bug form laporan', 'icon' => '🔧'],
-            ['id' => 2, 'title' => 'UI Update', 'description' => 'Perbaikan tampilan dashboard', 'icon' => '🎨'],
-        ];
+        $devLogs = Bug::whereIn('project_id', $projectIds)
+            ->orderBy('updated_at', 'desc')
+            ->take(5)
+            ->get()
+            ->map(fn ($bug) => [
+                'id' => $bug->id,
+                'title' => "Bug '{$bug->title}' diperbarui",
+                'description' => 'Status diubah menjadi ' . ucwords(str_replace('_', ' ', $bug->status)) . ' pada ' . $bug->updated_at->format('d M Y'),
+                'icon' => '🔄',
+            ]);
 
         return Inertia::render('client/dashboard', [
-            'auth' => ['user' => Auth::user()],
-            'stats' => [
-                'bugReported' => $bugReported,
-                'bugFixed' => $bugFixed,
-                'activeProjects' => $activeProjects,
-            ],
+            'stats' => $stats,
             'recentBugs' => $recentBugs,
             'devLogs' => $devLogs,
         ]);

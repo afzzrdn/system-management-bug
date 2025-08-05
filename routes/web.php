@@ -5,9 +5,11 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\BugController as AdminBugController;
 use App\Http\Controllers\Client\BugController as ClientBugController;
+use App\Http\Controllers\CustomerServiceController;
 use App\Http\Controllers\Developer\DashboardController as DeveloperDashboardController;
 use App\Http\Controllers\Developer\BugController as DeveloperBugController;
-use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\NotificationController;    
+use App\Http\Controllers\WablasController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
@@ -36,7 +38,24 @@ Route::middleware(['auth'])->group(function () {
             'count' => \App\Models\Notification::where('user_id', auth()->id())->where('is_read', false)->count()
         ]);
     })->name('notifications.unread-count');
-    Route::get('/customer-service',  fn () => Inertia::render('customer-service'))->name('customer-service.index');
+
+Route::middleware(['auth'])->prefix('customer-service')->name('customer-service.')->group(function () {
+    Route::get('/', fn () => Inertia::render('customer-service'))->name('index');
+    Route::get('/messages', [CustomerServiceController::class, 'fetchMessages'])->name('messages');
+    Route::post('/messages', [CustomerServiceController::class, 'sendMessage'])->name('send');
+    Route::get('/admin-status', [CustomerServiceController::class, 'getAdminStatus'])->name('admin-status');
+    });
+
+    // ADMIN CUSTOMER SERVICE
+Route::middleware(['auth', 'role:admin'])->prefix('admin/customer-service')->name('admin.customer-service.')->group(function () {
+    Route::get('/', fn () => Inertia::render('admin-customer-service'))->name('index');
+    Route::get('/clients', [CustomerServiceController::class, 'fetchClients'])->name('clients');
+    Route::get('/messages/{clientId}', [CustomerServiceController::class, 'fetchMessagesForClient'])->name('messages');
+    Route::post('/messages/{clientId}', [CustomerServiceController::class, 'adminSendMessage'])->name('send');
+});
+
+Route::get('/wablas/status', [WablasController::class, 'checkStatus']);
+Route::post('/wablas/send', [WablasController::class, 'sendTestMessage']);
 });
 
 
@@ -74,7 +93,6 @@ Route::middleware(['auth', 'role:developer'])->prefix('developer')->group(functi
 
 });
 
-// CLIENT ROUTES
 // CLIENT ROUTES
 Route::middleware(['auth', 'role:client'])->prefix('client')->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Client\DashboardController::class, 'index'])->name('client.dashboard');

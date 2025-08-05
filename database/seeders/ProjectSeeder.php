@@ -1,10 +1,10 @@
 <?php
-
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Project;
 use App\Models\User;
+use Illuminate\Support\Str;
 
 class ProjectSeeder extends Seeder
 {
@@ -12,28 +12,21 @@ class ProjectSeeder extends Seeder
     {
         $client = User::where('email', 'client@example.com')->first();
 
-        Project::firstOrCreate(
-            ['name' => 'Website E-Commerce'],
-            [
-                'description' => 'Project pengembangan website e-commerce untuk client.',
-                'client_id' => $client?->id,
-            ]
-        );
+        $projects = [
+            ['name' => 'Website E-Commerce', 'description' => 'Project pengembangan website e-commerce untuk client.'],
+            ['name' => 'Mobile App Bug Tracker', 'description' => 'Project aplikasi mobile untuk tracking bug.'],
+            ['name' => 'Company Profile Website', 'description' => 'Project website profil perusahaan.'],
+        ];
 
-        Project::firstOrCreate(
-            ['name' => 'Mobile App Bug Tracker'],
-            [
-                'description' => 'Project aplikasi mobile untuk tracking bug.',
-                'client_id' => $client?->id,
-            ]
-        );
-
-        Project::firstOrCreate(
-            ['name' => 'Company Profile Website'],
-            [
-                'description' => 'Project website profil perusahaan.',
-                'client_id' => $client?->id,
-            ]
-        );
+        foreach ($projects as $p) {
+            Project::firstOrCreate(
+                ['name' => $p['name']],
+                [
+                    'id' => Str::uuid(),
+                    'description' => $p['description'],
+                    'client_id' => $client->id,
+                ]
+            );
+        }
     }
 }

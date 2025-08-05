@@ -3,34 +3,34 @@
 namespace App\Models;
 
 use Illuminate\Support\Str;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
-class Project extends Model
+class ChatMessage extends Model
 {
     use HasFactory;
 
     public $incrementing = false;
     protected $keyType = 'string';
 
-    protected $fillable = ['name', 'description', 'client_id'];
+    protected $fillable = ['sender_id', 'receiver_id', 'message'];
 
-    public function client()
+    public function sender()
     {
-        return $this->belongsTo(User::class, 'client_id');
+        return $this->belongsTo(User::class, 'sender_id');
     }
 
-    public function bugs()
+    public function receiver()
     {
-        return $this->hasMany(Bug::class);
+        return $this->belongsTo(User::class, 'receiver_id');
     }
     protected static function boot()
-{
+    {
     parent::boot();
     static::creating(function ($model) {
         if (!$model->id) {
             $model->id = Str::uuid();
         }
     });
-}
+    }
 }

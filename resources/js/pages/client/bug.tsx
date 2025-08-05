@@ -2,26 +2,14 @@ import React, { useState } from 'react';
 import { useForm, usePage, router, Head } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import BugFormModal from '@/components/BugReportModal';
+import BugDetail from '@/components/BugDetail';
+import { Eye } from 'lucide-react';
+import type { Bug } from '@/types/bug';
 
 // --- TYPE DEFINITIONS ---
 type Project = { id: number; name: string; };
 type User = { id: number; name: string; role: 'developer' | 'client' | 'admin'; };
 type Attachment = { id: number; file_path: string; file_name: string; };
-type Bug = {
-    id: number;
-    title: string;
-    description: string;
-    priority: 'low' | 'medium' | 'high' | 'critical';
-    status: 'open' | 'in_progress' | 'resolved' | 'closed';
-    project_id: number;
-    reported_by: number;
-    assigned_to?: number | null;
-    resolved_at?: string | null;
-    project?: Project;
-    reporter?: User;
-    assignee?: User;
-    attachments?: Attachment[];
-};
 type PageProps = { bugs: Bug[]; projects: Project[]; users: User[]; };
 
 // --- FORM DATA TYPE ---
@@ -33,13 +21,16 @@ export type BugFormData = {
     attachments: File[];
     project_id: string;
     assigned_to: string;
-
 };
 
 export default function Bugs() {
     const { bugs = [], projects = [], users = [] } = usePage<PageProps>().props;
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingBug, setEditingBug] = useState<Bug | null>(null);
+
+    // state untuk modal detail
+    const [detailBug, setDetailBug] = useState<Bug | null>(null);
+    const [isDetailOpen, setIsDetailOpen] = useState(false);
 
     const initialFormValues: BugFormData = {
         title: '',
@@ -82,30 +73,34 @@ export default function Bugs() {
     };
 
     const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const onFinish = () => closeModal();
+        e.preventDefault();
+        const onFinish = () => closeModal();
 
-    transform((data) => ({
-        ...data,
-        description: data.description || '-',
-        priority: data.priority || 'low',
-        status: data.status || 'open',
-        assigned_to: data.assigned_to || '',
-        ...(isEditing ? { _method: 'put' } : {}),
-    }));
+        transform((data) => ({
+            ...data,
+            description: data.description || '-',
+            priority: data.priority || 'low',
+            status: data.status || 'open',
+            assigned_to: data.assigned_to || '',
+            ...(isEditing ? { _method: 'put' } : {}),
+        }));
 
-    if (isEditing) {
-        post(route('client.bugs.update', editingBug!.id), { onSuccess: onFinish, forceFormData: true });
-    } else {
-        post(route('client.bugs.store'), { onSuccess: onFinish, forceFormData: true });
-    }
-};
-
+        if (isEditing) {
+            post(route('client.bugs.update', editingBug!.id), { onSuccess: onFinish, forceFormData: true });
+        } else {
+            post(route('client.bugs.store'), { onSuccess: onFinish, forceFormData: true });
+        }
+    };
 
     const handleDelete = (id: number) => {
         if (confirm('Yakin ingin menghapus bug ini?')) {
             router.delete(route('bugs.destroy', id), { preserveScroll: true });
         }
+    };
+
+    const handleViewDetail = (bug: Bug) => {
+        setDetailBug(bug);
+        setIsDetailOpen(true);
     };
 
     return (
@@ -142,6 +137,9 @@ export default function Bugs() {
                                         <td className="px-6 py-4"><span className={`px-2 py-0.5 text-xs font-medium rounded-md ${statusInfo[bug.status].class}`}>{statusInfo[bug.status].text}</span></td>
                                         <td className="px-6 py-4">{bug.assignee?.name ?? 'Belum ada'}</td>
                                         <td className="px-6 py-4 flex items-center space-x-3">
+                                            <button onClick={() => handleViewDetail(bug)} className="text-blue-600 hover:underline flex items-center gap-1">
+                                                <Eye className="w-4 h-4" /> Lihat
+                                            </button>
                                             <button onClick={() => handleDelete(bug.id)} className="font-medium text-red-600 hover:underline">Hapus</button>
                                         </td>
                                     </tr>
@@ -159,6 +157,14 @@ export default function Bugs() {
                 </div>
 
                 <BugFormModal isOpen={isModalOpen} onClose={closeModal} onSubmit={handleSubmit} isEditing={isEditing} form={{ data, setData, errors, processing }} projects={projects} users={users} editingBug={editingBug} />
+
+                {detailBug && (
+                    <BugDetail
+                        bug={detailBug}
+                        isOpen={isDetailOpen}
+                        onClose={() => setIsDetailOpen(false)}
+                    />
+                )}
             </div>
         </AppLayout>
     );

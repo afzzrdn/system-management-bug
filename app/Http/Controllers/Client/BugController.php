@@ -15,7 +15,7 @@ class BugController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $bugs = Bug::with(['project', 'reporter', 'assignee'])
+        $bugs = Bug::with(['project', 'reporter', 'assignee', 'attachments'])
             ->where('reported_by', $user->id)
             ->orderBy('created_at', 'asc')
             ->get();

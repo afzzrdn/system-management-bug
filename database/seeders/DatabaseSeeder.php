@@ -10,8 +10,8 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             UserSeeder::class,
-            BugSeeder::class,
             ProjectSeeder::class,
+            BugSeeder::class,
         ]);
     }
 }

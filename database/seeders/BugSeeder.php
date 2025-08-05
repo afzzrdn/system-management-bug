@@ -1,11 +1,11 @@
 <?php
-
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Bug;
 use App\Models\Project;
 use App\Models\User;
+use Illuminate\Support\Str;
 
 class BugSeeder extends Seeder
 {
@@ -26,15 +26,14 @@ class BugSeeder extends Seeder
         foreach ($projects as $project) {
             foreach (range(1, 3) as $i) {
                 Bug::firstOrCreate(
+                    ['title' => $titles[array_rand($titles)] . " ({$project->name})"],
                     [
-                        'title' => $titles[array_rand($titles)] . " ({$project->name})",
-                    ],
-                    [
+                        'id' => Str::uuid(),
                         'description' => 'Deskripsi detail bug untuk project ' . $project->name . '.',
-                        'priority' => ['low', 'medium', 'high', 'critical'][array_rand(['low', 'medium', 'high', 'critical'])],
-                        'status' => ['open', 'in_progress', 'resolved'][array_rand(['open', 'in_progress', 'resolved'])],
+                        'priority' => ['low', 'medium', 'high', 'critical'][array_rand([0,1,2,3])],
+                        'status' => ['open', 'in_progress', 'resolved'][array_rand([0,1,2])],
                         'project_id' => $project->id,
-                        'reported_by' => $reporter?->id,
+                        'reported_by' => $reporter->id,
                     ]
                 );
             }

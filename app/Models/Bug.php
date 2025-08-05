@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable;
@@ -9,6 +10,9 @@ use Illuminate\Notifications\Notifiable;
 class Bug extends Model
 {
     use HasFactory, Notifiable;
+
+    public $incrementing = false;
+    protected $keyType = 'string';
 
     protected $fillable = [
         'title',
@@ -39,5 +43,14 @@ class Bug extends Model
     public function attachments()
     {
         return $this->hasMany(Attachment::class);
+    }
+        protected static function boot()
+    {
+    parent::boot();
+    static::creating(function ($model) {
+        if (!$model->id) {
+            $model->id = Str::uuid();
+        }
+    });
     }
 }
