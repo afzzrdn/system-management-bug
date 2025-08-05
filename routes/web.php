@@ -8,8 +8,9 @@ use App\Http\Controllers\Client\BugController as ClientBugController;
 use App\Http\Controllers\CustomerServiceController;
 use App\Http\Controllers\Developer\DashboardController as DeveloperDashboardController;
 use App\Http\Controllers\Developer\BugController as DeveloperBugController;
-use App\Http\Controllers\NotificationController;    
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\WablasController;
+use App\Http\Controllers\WebhookController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
@@ -19,6 +20,8 @@ Route::get('/', fn () => Redirect::to('/login'));
 Route::get('/login', fn () => Inertia::render('auth/login'))->name('login');
 Route::get('/register', fn () => Inertia::render('auth/register'))->name('register');
 
+// WEBHOOK WABLAS (untuk menerima pesan masuk dari WhatsApp)
+Route::post('/wablas/webhook', [WablasController::class, 'handleWebhook'])->name('wablas.webhook');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', function () {
@@ -56,6 +59,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin/customer-service')->nam
 
 Route::get('/wablas/status', [WablasController::class, 'checkStatus']);
 Route::post('/wablas/send', [WablasController::class, 'sendTestMessage']);
+
 });
 
 

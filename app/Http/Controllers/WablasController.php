@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use App\Services\WablasService;
+use App\Models\InboundMessage;
 
 class WablasController extends Controller
 {
@@ -35,5 +37,22 @@ class WablasController extends Controller
 
         $response = $this->wablas->sendMessage($request->phone, $request->message);
         return response()->json($response);
+    }
+
+    /**
+     * Terima pesan masuk dari Wablas (Webhook)
+     */
+    public function handleWebhook(Request $request)
+    {
+        Log::info('Inbound WhatsApp Message:', $request->all());
+
+        // Simpan ke database
+        InboundMessage::create([
+            'phone'     => $request->input('phone'),
+            'message'   => $request->input('message'),
+            'device_id' => $request->input('device_id'),
+        ]);
+
+        return response()->json(['status' => 'received']);
     }
 }

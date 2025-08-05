@@ -60,28 +60,25 @@ class WablasService
      */
     public function sendMessage($phoneNumber, $message)
     {
-        if (!$this->apiKey || !$this->domain) {
+        if (!$this->apiKey || !$this->secretKey || !$this->domain) {
             Log::warning('Wablas credentials are not fully configured.');
-            return;
-        }
-
-        // Cek status device dulu
-        $status = $this->checkStatus();
-        if (!$status['status']) {
-            Log::warning('Cannot send message: ' . $status['message']);
-            return $status;
+            return ['status' => false, 'message' => 'Kredensial Wablas tidak lengkap.'];
         }
 
         $url = "https://{$this->domain}/api/send-message";
 
+        // Payload tidak lagi memerlukan secret key
         $payload = [
             'phone'   => $phoneNumber,
             'message' => $message,
         ];
 
         try {
+            // Gabungkan token dan secret key di header Authorization sesuai pengumuman
+            $authToken = $this->apiKey . '.' . $this->secretKey;
+
             $response = Http::withHeaders([
-                'Authorization' => $this->apiKey . '.' . $this->secretKey,
+                'Authorization' => $authToken,
             ])->post($url, $payload);
 
             Log::info('Wablas API Response:', $response->json() ?? ['raw' => $response->body()]);
