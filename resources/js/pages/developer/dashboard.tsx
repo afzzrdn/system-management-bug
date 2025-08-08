@@ -2,6 +2,7 @@ import ProjectCard from '@/components/ProjectCard';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { ArrowUpRight, AlertTriangle, CheckCircle, Code, Wrench } from 'lucide-react';
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, Label, } from 'recharts';
 import { ReactNode } from 'react';
 
 type StatCardProps = {
@@ -34,6 +35,12 @@ type Bug = {
 type Props = {
   bugCountFromClients: number;
   bugDetails: Bug[];
+  bugStatusStats: {
+    open: number;
+    in_progress: number;
+    resolved: number;
+    closed: number;
+  };
 };
 
 // ---- Helper Components ----
@@ -125,6 +132,58 @@ export default function Dashboard() {
     clientName: bug.reporter || '-',
   }));
 
+   const COLORS = ['#EF4444', '#F59E0B', '#3B82F6', '#10B981'];
+
+   const renderCustomizedLabel = ({
+  cx, cy, midAngle, innerRadius, outerRadius, percent, index,
+}: any) => {
+  const RADIAN = Math.PI / 180;
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.6;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+  return (
+    <text
+      x={x}
+      y={y}
+      fill="white"
+      textAnchor="middle"
+      dominantBaseline="central"
+      className="text-xs font-semibold"
+    >
+      {`${(percent * 100).toFixed(0)}%`}
+    </text>
+  );
+};
+
+const getStatusCounts = (bugs: Bug[]) => {
+  const counts = {
+    open: 0,
+    in_progress: 0,
+    resolved: 0,
+    closed: 0,
+  };
+
+  bugs.forEach((bug) => {
+    const status = bug.status?.toLowerCase();
+    if (status in counts) {
+      counts[status as keyof typeof counts]++;
+    }
+  });
+
+  return counts;
+};
+
+const { bugStatusStats = { open: 0, in_progress: 0, resolved: 0, closed: 0 } } = usePage<Props>().props;
+
+const chartData = [
+  { name: 'Open', value: bugStatusStats.open },
+  { name: 'In Progress', value: bugStatusStats.in_progress },
+  { name: 'Resolved', value: bugStatusStats.resolved },
+  { name: 'Closed', value: bugStatusStats.closed },
+];
+
+
   return (
     <AppLayout>
       <Head title="Developer Dashboard" />
@@ -143,9 +202,32 @@ export default function Dashboard() {
             </div>
 
             <div className="w-full h-[300px] bg-white rounded-xl shadow-sm p-4">
-              <h3 className="font-semibold text-gray-600">Developer Chart</h3>
-              {/* Chart bisa ditambahkan di sini */}
-            </div>
+                <h3 className="font-semibold text-gray-600 mb-4">Statistik Bug</h3>
+                <ResponsiveContainer width="100%" height="120%">
+                    <PieChart>
+                    <Pie
+                        data={chartData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={renderCustomizedLabel}
+                        outerRadius={90}
+                        fill="#8884d8"
+                        dataKey="value"
+                    >
+                        {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                    </Pie>
+                    <Tooltip
+                        contentStyle={{ fontSize: '14px' }}
+                        formatter={(value: number, name: string) => [`${value} bug`, name]}
+                    />
+                    <Legend verticalAlign="bottom" height={36} />
+                    </PieChart>
+                </ResponsiveContainer>
+                </div>
+
           </section>
 
           {/* Aktivitas Terbaru */}

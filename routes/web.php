@@ -94,6 +94,7 @@ Route::middleware(['auth', 'role:developer'])->prefix('developer')->group(functi
     Route::get('/dashboard', [DeveloperDashboardController::class, 'index'])->name('dashboard');
      Route::get('/bugs', [DeveloperBugController::class, 'index'])->name('developer.bugs.index');
      Route::get('/bugs/{bug}', [DeveloperBugController::class, 'show'])->name('developer.bugs.show');
+     Route::put('/bugs/{bug}', [DeveloperBugController::class, 'update'])->name('developer.bugs.update');
 
 });
 

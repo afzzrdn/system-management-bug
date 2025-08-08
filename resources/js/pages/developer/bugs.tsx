@@ -48,12 +48,12 @@ export default function DeveloperBugsPage() {
         setLoadingDetail(false);
     }
     };
-    
+
     const closeDetailModal = () => {
         setIsDetailModalOpen(false);
         setSelectedBug(null);
     };
-    
+
     const bugs = bugsFromProps || [];
     const stats = statsFromProps || { assigned: 0, in_progress: 0, resolved: 0 };
 
@@ -75,13 +75,13 @@ export default function DeveloperBugsPage() {
         <AppLayout>
             <Head title="Bug" />
             <div className="p-8">
-                <h1 className="text-2xl font-semibold text-gray-400 mb-6">Bug</h1>
+                <h1 className="text-2xl font-semibold text-gray-400 mb-6">Management Bug</h1>
             </div>
             <div className="p-4 md:p-6 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-400 flex items-start justify-between">
                         <div>
-                            <h3 className="font-semibold text-gray-500">Ditugaskan</h3>
+                            <h3 className="font-semibold text-gray-500">Baru Ditugaskan</h3>
                             <p className="text-3xl font-bold mt-2">{stats.assigned}</p>
                         </div>
                         <div className="bg-orange-100 p-3 rounded-lg">

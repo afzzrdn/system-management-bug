@@ -22,7 +22,7 @@ export default function Login() {
             <div className="min-h-screen w-full flex flex-col lg:grid lg:grid-cols-2">
                 <div className="relative h-64 lg:h-full order-1 lg:order-2 ">
                     <img
-                        src="/img/background-gambar.jpg"
+                        src="/img/background-gambar.gif"
                         alt="Abstract art representing data and bugs"
                         className="absolute inset-0 h-full w-full object-cover"
                         onError={(e) => e.currentTarget.src = 'https://placehold.co/1080x1920/111827/ffffff?text=Image+Error'}

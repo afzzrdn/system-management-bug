@@ -22,7 +22,7 @@ const navItems = [
     { title: 'Project', href: '/admin/project', roles: ['admin'] },
     { title: 'Bug', href: '/developer/bugs', roles: ['developer']},
     { title: 'Project', href: '/client/project', roles: ['client']},
-    { title: 'Lapor Bug', href: '/client/bugs', roles: ['client']},
+    { title: 'Bug', href: '/client/bugs', roles: ['client']},
 ];
 
 export default function AppLayout({ children }: AppLayoutProps) {

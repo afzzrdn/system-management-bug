@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Developer;
 
 use App\Http\Controllers\Controller;
+use App\Services\NotificationSenderService;
 use App\Models\Bug;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 
 class BugController extends Controller
 {
@@ -32,6 +34,41 @@ class BugController extends Controller
             'auth' => ['user' => Auth::user()],
         ]);
     }
+
+    public function update(Request $request, Bug $bug, NotificationSenderService $sender)
+{
+    if ($bug->assigned_to !== Auth::id()) {
+        abort(403, 'Akses ditolak');
+    }
+
+    $request->validate([
+        'status' => 'required|in:open,in_progress,resolved,closed',
+    ]);
+
+    $bug->update([
+        'status' => $request->status,
+    ]);
+
+    $bug->load('reporter');
+
+     if ($bug->reporter) {
+        $statusText = match ($bug->status) {
+            'open' => 'dibuka',
+            'in_progress' => 'sedang ditangani',
+            'resolved' => 'telah diselesaikan',
+            'closed' => 'ditutup',
+            default => $bug->status,
+        };
+
+        $sender->sendToUser(
+            $bug->reporter,
+            'Status Bug Diperbarui',
+            "Status bug \"{$bug->title}\" telah diperbarui menjadi *{$statusText}* oleh developer."
+        );
+    }
+
+    return redirect()->back()->with('success', 'Status bug berhasil diperbarui.');
+}
     public function show(Bug $bug)
 {
     if ($bug->assigned_to !== Auth::id()) {
@@ -40,15 +77,13 @@ class BugController extends Controller
 
     $bug->load(['project', 'reporter', 'attachments']);
 
-    // Kalau request dari axios (AJAX/JSON), kirim JSON
     if (request()->wantsJson()) {
         return response()->json([
             'bug' => $bug
         ]);
     }
 
-    // Kalau request biasa (navigasi Inertia), kirim Inertia view
-    return inertia('developer/BugDetail', [
+    return inertia('components/BugDetail', [
         'bug' => $bug,
     ]);
 }

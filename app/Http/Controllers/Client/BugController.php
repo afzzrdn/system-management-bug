@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
+use App\Services\NotificationSenderService;
 use App\Models\Bug;
 use App\Models\Project;
 use App\Models\User;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -46,7 +48,7 @@ class BugController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request  , NotificationSenderService $sender)
 {
     $validated = $request->validate([
         'title' => 'required|string|max:255',
@@ -74,6 +76,30 @@ class BugController extends Controller
             ]);
         }
     }
+
+   if ($bug->assigned_to) {
+        $sender->sendToUser(
+            $bug->assignee,
+            'Penugasan Bug Baru',
+            "Anda telah ditugaskan untuk menangani bug: \"{$bug->title}\". Silakan tinjau dan tangani sesuai prioritas yang ditentukan."
+        );
+    }
+
+    $sender->sendToUser(
+        $bug->reporter,
+        'Laporan Bug Telah Dikirim',
+        "Laporan bug \"{$bug->title}\" Anda telah berhasil dikirim dan saat ini sedang ditindaklanjuti oleh tim pengembang."
+    );
+
+    $adminUsers = User::where('role', 'admin')->get();
+
+    foreach ($adminUsers as $admin) {
+    $sender->sendToUser(
+        $admin,
+        'Bug Baru dari Client',
+        "Client {$bug->reporter->name} melaporkan bug: \"{$bug->title}\". Silakan distribusikan ke developer."
+    );
+}
 
     return redirect()->route('client.bugs.index')
         ->with('success', 'Bug berhasil dilaporkan.');

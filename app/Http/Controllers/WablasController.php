@@ -39,20 +39,4 @@ class WablasController extends Controller
         return response()->json($response);
     }
 
-    /**
-     * Terima pesan masuk dari Wablas (Webhook)
-     */
-    public function handleWebhook(Request $request)
-    {
-        Log::info('Inbound WhatsApp Message:', $request->all());
-
-        // Simpan ke database
-        InboundMessage::create([
-            'phone'     => $request->input('phone'),
-            'message'   => $request->input('message'),
-            'device_id' => $request->input('device_id'),
-        ]);
-
-        return response()->json(['status' => 'received']);
-    }
 }

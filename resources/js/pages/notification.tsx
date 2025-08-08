@@ -16,11 +16,23 @@ interface Notification {
 
 interface Props {
     notifications: Notification[];
+    auth: {
+        user: {
+            id: number;
+            name: string;
+            role: 'client' | 'developer' | 'admin';
+        };
+    }
 }
 
 // --- Komponen ---
-export default function Notifications({ notifications }: Props) {
+export default function Notifications({ notifications, auth }: Props) {
     const [filter, setFilter] = useState<'unread' | 'read'>('unread');
+    const role = auth.user.role;
+
+    const roleTitle = role === 'admin' ? 'Admin'
+                     : role === 'developer' ? 'Developer'
+                     : 'Client';
 
     const unreadCount = notifications.filter(n => !n.is_read).length;
     const readCount = notifications.filter(n => n.is_read).length;
@@ -56,7 +68,7 @@ export default function Notifications({ notifications }: Props) {
 
             <div className="p-8">
                 {/* Header tetap sama seperti permintaan */}
-                <h1 className="text-2xl font-semibold text-gray-400 mb-6">Notifikasi</h1>
+                <h1 className="text-2xl font-semibold text-gray-400 mb-6">Notifikasi {roleTitle}</h1>
 
                 <div className="flex flex-col space-y-8 md:flex-row md:space-x-10 md:space-y-0">
                     {/* --- Sidebar untuk Filter --- */}

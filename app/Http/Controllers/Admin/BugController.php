@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\NotificationSenderService;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Notification;
 use App\Models\Bug;
@@ -28,68 +29,81 @@ class BugController extends Controller
         ]);
     }
 
-    public function store(Request $request)
-    {
-        $data = $request->validate([
-            'title'        => 'required|string|max:255',
-            'description'  => 'nullable|string',
-            'priority'     => 'required|in:low,medium,high,critical',
-            'status'       => 'required|in:open,in_progress,resolved,closed',
-            'project_id'   => 'required|exists:projects,id',
-            'reported_by'  => 'required|exists:users,id',
-            'assigned_to'  => 'nullable|exists:users,id',
-            'resolved_at'  => 'nullable|date',
-            'attachment'   => 'nullable|file|mimes:jpg,jpeg,png,pdf,docx|max:5120',
-        ]);
+    public function store(Request $request, NotificationSenderService $sender)
+{
+    $data = $request->validate([
+        'title'        => 'required|string|max:255',
+        'description'  => 'nullable|string',
+        'priority'     => 'required|in:low,medium,high,critical',
+        'status'       => 'required|in:open,in_progress,resolved,closed',
+        'project_id'   => 'required|exists:projects,id',
+        'assigned_to'  => 'nullable|exists:users,id',
+        'resolved_at'  => 'nullable|date',
+        'attachments.*' => 'nullable|file|mimes:jpg,jpeg,png,gif,pdf|max:10240',
+    ]);
 
-        $bug = Bug::create($data);
+    // Tetapkan user yang sedang login sebagai pelapor
+    $data['reported_by'] = Auth::id();
 
-        // Simpan attachment sebagai relasi jika ada file
-        if ($request->hasFile('attachment')) {
-            $file = $request->file('attachment');
+    $bug = Bug::create($data);
+
+    // Simpan semua attachment jika ada
+    if ($request->hasFile('attachments')) {
+        foreach ($request->file('attachments') as $file) {
             $path = $file->store('attachments', 'public');
 
             $bug->attachments()->create([
-                'file_path' => $path,
-                'file_name' => $file->getClientOriginalName(),
+                'file_path'   => $path,
+                'file_name'   => $file->getClientOriginalName(),
                 'uploaded_by' => Auth::id(),
             ]);
         }
-
-        if ($bug->assigned_to) {
-            Notification::create([
-                'user_id' => $bug->assigned_to,
-                'title' => 'Penugasan Bug Baru',
-                'message' => "Anda telah ditugaskan untuk menangani bug: \"{$bug->title}\". Silakan tinjau dan tangani sesuai prioritas yang ditentukan.",
-            ]);
-            Notification::create([
-                'user_id' => $bug->reported_by,
-                'title' => 'Laporan Bug Telah Dikirim',
-                'message' => "Laporan bug \"{$bug->title}\" Anda telah berhasil dikirim dan saat ini sedang ditindaklanjuti oleh tim pengembang.",
-            ]);
-        }
-
-        return redirect()->route('bugs.index')->with('success', 'Bug created successfully.');
     }
 
+    // Kirim notifikasi
+    $bug->load('assignee');
+
+    if ($bug->assigned_to) {
+       $sender->sendToUser(
+        $bug->assignee,
+        'Penugasan Bug Baru',
+        "Anda telah ditugaskan untuk menangani bug: \"{$bug->title}\". Silakan tinjau dan tangani sesuai prioritas yang ditentukan."
+    );
+    }
+    $sender->sendToUser(
+    $bug->reporter,
+    'Laporan Bug Telah Dikirim',
+    "Laporan bug \"{$bug->title}\" Anda telah berhasil dikirim dan saat ini sedang ditindaklanjuti oleh tim pengembang."
+    );
+
+    return redirect()->route('bugs.index')->with('success', 'Bug created successfully.');
+}
+public function updateStatus(NotificationSenderService $sender)
+{
+    $user = User::find(1);
+
+    $sender->sendToUser($user, 'Status Pesanan Diperbarui', 'Pesanan Anda telah diproses oleh admin.');
+
+    return redirect()->back()->with('success', 'Notifikasi dikirim.');
+}
 
     public function update(Request $request, Bug $bug)
-    {
-        $data = $request->validate([
-            'title'        => 'required|string|max:255',
-            'description'  => 'nullable|string',
-            'priority'     => 'required|in:low,medium,high,critical',
-            'status'       => 'required|in:open,in_progress,resolved,closed',
-            'project_id'   => 'required|exists:projects,id',
-            'reported_by'  => 'required|exists:users,id',
-            'assigned_to'  => 'nullable|exists:users,id',
-            'resolved_at'  => 'nullable|date',
-            'attachment'   => 'nullable|file|mimes:jpg,jpeg,png,pdf,docx|max:5120',
-        ]);
+{
+    $data = $request->validate([
+        'title'        => 'required|string|max:255',
+        'description'  => 'nullable|string',
+        'priority'     => 'required|in:low,medium,high,critical',
+        'status'       => 'required|in:open,in_progress,resolved,closed',
+        'project_id'   => 'required|exists:projects,id',
+        'assigned_to'  => 'nullable|exists:users,id',
+        'resolved_at'  => 'nullable|date',
+        'attachments.*' => 'nullable|file|mimes:jpg,jpeg,png,gif,pdf|max:10240',
+    ]);
 
-        $bug->update($data);
+    $bug->update($data);
 
-        if ($request->hasFile('attachment')) {
+    // Hapus dan ganti file attachment jika ada yang baru diupload
+    if ($request->hasFile('attachments')) {
         foreach ($bug->attachments as $attachment) {
             if (Storage::disk('public')->exists($attachment->file_path)) {
                 Storage::disk('public')->delete($attachment->file_path);
@@ -97,29 +111,17 @@ class BugController extends Controller
             $attachment->delete();
         }
 
-        $file = $request->file('attachment');
-        $path = $file->store('attachments', 'public');
+        foreach ($request->file('attachments') as $file) {
+            $path = $file->store('attachments', 'public');
 
-        $bug->attachments()->create([
-            'file_path'   => $path,
-            'file_name'   => $file->getClientOriginalName(),
-            'uploaded_by' => Auth::id(),
-        ]);
+            $bug->attachments()->create([
+                'file_path'   => $path,
+                'file_name'   => $file->getClientOriginalName(),
+                'uploaded_by' => Auth::id(),
+            ]);
+        }
     }
 
     return redirect()->route('bugs.index')->with('success', 'Bug updated successfully.');
 }
-
-
-    public function destroy(Bug $bug)
-    {
-        foreach ($bug->attachments as $attachment) {
-        if (Storage::disk('public')->exists($attachment->file_path)) {
-            Storage::disk('public')->delete($attachment->file_path);
-        }
-    }
-        $bug->delete();
-
-        return redirect()->route('bugs.index')->with('success', 'Bug deleted successfully.');
-    }
 }
