@@ -22,7 +22,7 @@ const navItems = [
     { title: 'Project', href: '/admin/project', roles: ['admin'] },
     { title: 'Bug', href: '/developer/bugs', roles: ['developer']},
     { title: 'Project', href: '/client/project', roles: ['client']},
-    { title: 'Lapor Bug', href: '/client/bugs', roles: ['client']},
+    { title: 'Bug', href: '/client/bugs', roles: ['client']},
 ];
 
 export default function AppLayout({ children }: AppLayoutProps) {
@@ -71,9 +71,16 @@ export default function AppLayout({ children }: AppLayoutProps) {
                             </nav>
                         </div>
                         <div className="w-1/3 flex justify-end items-center gap-3">
-                            <Link href="/customer-service" className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-white shadow-sm hover:bg-gray-200 transition">
-                                <MessageSquare size={16} className="text-gray-700" />
-                            </Link>
+                            {user.role === 'client' && (
+                                <Link href="/customer-service" className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-white shadow-sm hover:bg-gray-200 transition">
+                                    <MessageSquare size={16} className="text-gray-700" />
+                                </Link>
+                            )}
+                            {user.role === 'admin' && (
+                                <Link href="/admin/customer-service" className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-white shadow-sm hover:bg-gray-200 transition">
+                                    <MessageSquare size={16} className="text-gray-700" />
+                                </Link>
+                            )}
                             <Link href="/notification" className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-white shadow-sm hover:bg-gray-200 transition">
                                 <Bell size={16} className="text-gray-700" />
                                 {unreadCount > 0 && (

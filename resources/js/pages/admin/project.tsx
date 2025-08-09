@@ -114,7 +114,7 @@ export default function ProjectIndex() {
             {/* Main Page Content */}
             <div className="p-8 max-w-full mx-auto">
                 <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold text-gray-400">Manajemen Project</h2>
+                    <h2 className="text-2xl font-bold text-gray-400">Management Project</h2>
                     <button
                         onClick={openModalForCreate}
                         className="inline-flex items-center gap-2 justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -152,7 +152,7 @@ export default function ProjectIndex() {
                 setData={setData}
                 errors={errors}
                 clients={clients}
-            />      
+            />
 
             {selectedProject && (
                 <ProjectDetailModal

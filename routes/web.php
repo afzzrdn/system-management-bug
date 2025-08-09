@@ -5,7 +5,12 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\BugController as AdminBugController;
 use App\Http\Controllers\Client\BugController as ClientBugController;
+use App\Http\Controllers\CustomerServiceController;
+use App\Http\Controllers\Developer\DashboardController as DeveloperDashboardController;
+use App\Http\Controllers\Developer\BugController as DeveloperBugController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\WablasController;
+use App\Http\Controllers\WebhookController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
@@ -15,6 +20,8 @@ Route::get('/', fn () => Redirect::to('/login'));
 Route::get('/login', fn () => Inertia::render('auth/login'))->name('login');
 Route::get('/register', fn () => Inertia::render('auth/register'))->name('register');
 
+// WEBHOOK WABLAS (untuk menerima pesan masuk dari WhatsApp)
+Route::post('/wablas/webhook', [WablasController::class, 'handleWebhook'])->name('wablas.webhook');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', function () {
@@ -34,7 +41,25 @@ Route::middleware(['auth'])->group(function () {
             'count' => \App\Models\Notification::where('user_id', auth()->id())->where('is_read', false)->count()
         ]);
     })->name('notifications.unread-count');
-    Route::get('/customer-service',  fn () => Inertia::render('customer-service'))->name('customer-service.index');
+
+Route::middleware(['auth'])->prefix('customer-service')->name('customer-service.')->group(function () {
+    Route::get('/', fn () => Inertia::render('customer-service'))->name('index');
+    Route::get('/messages', [CustomerServiceController::class, 'fetchMessages'])->name('messages');
+    Route::post('/messages', [CustomerServiceController::class, 'sendMessage'])->name('send');
+    Route::get('/admin-status', [CustomerServiceController::class, 'getAdminStatus'])->name('admin-status');
+    });
+
+    // ADMIN CUSTOMER SERVICE
+Route::middleware(['auth', 'role:admin'])->prefix('admin/customer-service')->name('admin.customer-service.')->group(function () {
+    Route::get('/', fn () => Inertia::render('admin-customer-service'))->name('index');
+    Route::get('/clients', [CustomerServiceController::class, 'fetchClients'])->name('clients');
+    Route::get('/messages/{clientId}', [CustomerServiceController::class, 'fetchMessagesForClient'])->name('messages');
+    Route::post('/messages/{clientId}', [CustomerServiceController::class, 'adminSendMessage'])->name('send');
+});
+
+Route::get('/wablas/status', [WablasController::class, 'checkStatus']);
+Route::post('/wablas/send', [WablasController::class, 'sendTestMessage']);
+
 });
 
 
@@ -66,15 +91,18 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
 
 // DEVELOPER ROUTES
 Route::middleware(['auth', 'role:developer'])->prefix('developer')->group(function () {
-    Route::get('/dashboard', [\App\Http\Controllers\Developer\DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/bugs', fn () => Inertia::render('developer/bugs'))->name('developer.bug');
-    // Tambah route developer lain di sini
+    Route::get('/dashboard', [DeveloperDashboardController::class, 'index'])->name('dashboard');
+     Route::get('/bugs', [DeveloperBugController::class, 'index'])->name('developer.bugs.index');
+     Route::get('/bugs/{bug}', [DeveloperBugController::class, 'show'])->name('developer.bugs.show');
+     Route::put('/bugs/{bug}', [DeveloperBugController::class, 'update'])->name('developer.bugs.update');
+
 });
 
 // CLIENT ROUTES
 Route::middleware(['auth', 'role:client'])->prefix('client')->group(function () {
-    Route::get('/dashboard', fn () => Inertia::render('client/dashboard'))->name('client.dashboard');
-    Route::get('/project', fn () => Inertia::render('client/project'))->name('client.project');
+    Route::get('/dashboard', [\App\Http\Controllers\Client\DashboardController::class, 'index'])->name('client.dashboard');
+    Route::get('/project', [\App\Http\Controllers\Client\ProjectController::class, 'index'])->name('client.project');
+    Route::get('/project/{project}', [\App\Http\Controllers\Client\ProjectController::class, 'show'])->name('client.project.show');
     Route::resource('bugs', ClientBugController::class)->names([
         'index'   => 'client.bugs.index',
         'store'   => 'client.bugs.store',
@@ -83,7 +111,7 @@ Route::middleware(['auth', 'role:client'])->prefix('client')->group(function () 
     ])->parameters([
         'bugs' => 'bug',
     ]);
-    // Tambah route client lain di sini
 });
 
-require __DIR__.'/auth.php'; 
+
+require __DIR__.'/auth.php';

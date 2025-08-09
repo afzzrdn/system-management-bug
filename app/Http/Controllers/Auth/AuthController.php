@@ -18,16 +18,20 @@ class AuthController extends Controller
         $validated = $request->validate([
             'name'      => 'required|string|max:255',
             'email'     => 'required|string|email|unique:users,email',
+            'phone'     => 'required|string|regex:/^628[0-9]{8,15}$/',
             'password'  => 'required|string|min:8|confirmed',
         ]);
 
         $user = User::create([
             'name'     => $validated['name'],
             'email'    => $validated['email'],
+            'phone'    => $validated['phone'],
             'password' => Hash::make($validated['password']),
             'role'     => UserRole::Client, // Pastikan enum UserRole ada dengan case 'User'
         ]);
+        Auth::login($user);
 
+    return redirect()->to('/client/dashboard');
     }
 
     // POST /login
@@ -55,7 +59,7 @@ class AuthController extends Controller
         ];
 
         return redirect()->to($redirectMap[$role] ?? '/dashboard');
-    }   
+    }
 
     // POST /logout
     public function logout(Request $request)
