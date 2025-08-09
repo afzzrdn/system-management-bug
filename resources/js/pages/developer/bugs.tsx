@@ -77,7 +77,7 @@ export default function DeveloperBugsPage() {
             <div className="p-8">
                 <h1 className="text-2xl font-semibold text-gray-400 mb-6">Management Bug</h1>
             </div>
-            <div className="p-4 md:p-6 space-y-6">
+            <div className="p-4 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-400 flex items-start justify-between">
                         <div>

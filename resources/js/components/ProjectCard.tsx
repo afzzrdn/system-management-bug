@@ -5,7 +5,7 @@ type Status = 'Selesai' | 'Dikerjakan' | 'Ditinjau';
 type ProjectCardProps = {
   projectTitle: string;
   taskTitle: string;
-  clientName: string; // ganti dari assignee -> clientName
+  clientName: string;
   status?: Status;
 };
 

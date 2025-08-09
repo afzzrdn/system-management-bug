@@ -102,7 +102,6 @@ public function updateStatus(NotificationSenderService $sender)
 
     $bug->update($data);
 
-    // Hapus dan ganti file attachment jika ada yang baru diupload
     if ($request->hasFile('attachments')) {
         foreach ($bug->attachments as $attachment) {
             if (Storage::disk('public')->exists($attachment->file_path)) {
