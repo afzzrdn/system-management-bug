@@ -176,7 +176,7 @@ const getStatusCounts = (bugs: Bug[]) => {
 
 const { bugStatusStats = { open: 0, in_progress: 0, resolved: 0, closed: 0 } } = usePage<Props>().props;
 
-const chartData = [
+const StatusData = [
   { name: 'Open', value: bugStatusStats.open },
   { name: 'In Progress', value: bugStatusStats.in_progress },
   { name: 'Resolved', value: bugStatusStats.resolved },
@@ -201,38 +201,53 @@ const chartData = [
               ))}
             </div>
 
-            <div className="w-full h-[390px] bg-white rounded-xl shadow-sm p-4">
-                <h3 className="font-semibold text-gray-600 mb-4">Statistik Bug</h3>
-                <ResponsiveContainer width="100%" height="90%">
+            <div className="rounded-2xl bg-white shadow-sm">
+            {/* Header */}
+            <div className="px-6 pt-5 pb-4">
+                <h3 className=" text-xl font-semibold text-gray-800">Statistik Bug</h3>
+                <p className="mt-1 text-sm text-gray-500">Status</p>
+            </div>
+
+            {/* Chart */}
+            <div className="px-4 md:px-6 py-6">
+                <div className="h-[340px]">
+                <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
+                    <Legend
+                        layout="horizontal"
+                        verticalAlign="top"
+                        align="center"
+                        wrapperStyle={{ paddingBottom: 8 }}
+                    />
                     <Pie
-                        data={chartData}
+                        data={StatusData}
                         cx="50%"
-                        cy="50%"
+                        cy="56%"
+                        outerRadius={110}
                         labelLine={false}
                         label={renderCustomizedLabel}
-                        outerRadius={110}
-                        fill="#8884d8"
                         dataKey="value"
+                        isAnimationActive={false}
                     >
-                        {chartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        {StatusData.map((_, i) => (
+                        <Cell key={i} fill={COLORS[i % COLORS.length]} />
                         ))}
                     </Pie>
                     <Tooltip
                         contentStyle={{ fontSize: '14px' }}
-                        formatter={(value: number, name: string) => [`${value} bug`, name]}
+                        formatter={(v: number, n: string) => [`${v} bug`, n]}
                     />
-                    <Legend verticalAlign="bottom" height={36} />
                     </PieChart>
                 </ResponsiveContainer>
                 </div>
+            </div>
+            </div>
 
           </section>
           {/* Aktivitas Terbaru */}
           <section>
             <h3 className="text-xl font-semibold text-center text-gray-600 mb-4">Aktivitas Terbaru</h3>
-            <div className="space-y-4 max-h-[700px] overflow-y-auto pr-2 bg-white rounded-xl shadow-sm">
+            <div className="space-y-4 max-h-[795px] overflow-y-auto pr-2 bg-white rounded-xl shadow-sm">
               {projectsData.map((project, index) => (
                 <ProjectCard key={index} {...project} />
               ))}
