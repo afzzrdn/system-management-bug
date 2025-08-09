@@ -1,8 +1,8 @@
 import ProjectCard from '@/components/ProjectCard';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, usePage } from '@inertiajs/react';
-import { ArrowUpRight, AlertTriangle, CheckCircle, Code, Wrench } from 'lucide-react';
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, Label, } from 'recharts';
+import { ArrowUpRight, CheckCircle, Code, Wrench, FolderOpenDot } from 'lucide-react';
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, } from 'recharts';
 import { ReactNode } from 'react';
 
 type StatCardProps = {
@@ -94,24 +94,24 @@ export default function Dashboard() {
   // Buat data kartu statistik
   const statCardsData: StatCardProps[] = [
     {
-      icon: <AlertTriangle size={18} />,
-      title: 'Bug dari Client',
-      value: bugCountFromClients,
-      iconBgColor: 'bg-red-500',
+      icon: <FolderOpenDot size={18} />,
+      title: 'Bug Ditinjau',
+      value: getBugCountByStatus(bugDetails, 'Ditinjau'),
+      iconBgColor: 'bg-yellow-500',
       href: '#',
     },
     {
       icon: <Wrench size={18} />,
       title: 'Sedang Dikerjakan',
       value: getBugCountByStatus(bugDetails, 'Dikerjakan'),
-      iconBgColor: 'bg-indigo-500',
+      iconBgColor: 'bg-purple-500',
       href: '#',
     },
     {
       icon: <CheckCircle size={18} />,
       title: 'Bug Selesai',
       value: getBugCountByStatus(bugDetails, 'Selesai'),
-      iconBgColor: 'bg-green-600',
+      iconBgColor: 'bg-green-500',
       href: '#',
     },
     {
@@ -132,9 +132,9 @@ export default function Dashboard() {
     clientName: bug.reporter || '-',
   }));
 
-   const COLORS = ['#EF4444', '#F59E0B', '#3B82F6', '#10B981'];
+    const COLORS = ['#F59E0B', '#8B5CF6', '#22C55E'];
 
-   const renderCustomizedLabel = ({
+    const renderCustomizedLabel = ({
   cx, cy, midAngle, innerRadius, outerRadius, percent, index,
 }: any) => {
   const RADIAN = Math.PI / 180;
@@ -180,18 +180,18 @@ const chartData = [
   { name: 'Open', value: bugStatusStats.open },
   { name: 'In Progress', value: bugStatusStats.in_progress },
   { name: 'Resolved', value: bugStatusStats.resolved },
-  { name: 'Closed', value: bugStatusStats.closed },
 ];
 
 
   return (
     <AppLayout>
-      <Head title="Developer Dashboard" />
-      <div className="p-4 md:p-6">
-        <header className="flex flex-wrap justify-between items-center mb-8 gap-4">
-          <h2 className="text-2xl font-semibold text-gray-400">Developer Dashboard</h2>
+    <Head title="Developer Dashboard" />
+    <div className="p-4 md:p-6">
+        <header className="mb-10 flex flex-wrap items-center justify-between gap-6">
+            <div>
+                <h2 className="text-2xl font-semibold text-gray-400">Developer Dashboard</h2>
+            </div>
         </header>
-
         <main className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Kartu Statistik */}
           <section className="lg:col-span-2 flex flex-col gap-8">
@@ -201,9 +201,9 @@ const chartData = [
               ))}
             </div>
 
-            <div className="w-full h-[300px] bg-white rounded-xl shadow-sm p-4">
+            <div className="w-full h-[390px] bg-white rounded-xl shadow-sm p-4">
                 <h3 className="font-semibold text-gray-600 mb-4">Statistik Bug</h3>
-                <ResponsiveContainer width="100%" height="120%">
+                <ResponsiveContainer width="100%" height="90%">
                     <PieChart>
                     <Pie
                         data={chartData}
@@ -211,7 +211,7 @@ const chartData = [
                         cy="50%"
                         labelLine={false}
                         label={renderCustomizedLabel}
-                        outerRadius={90}
+                        outerRadius={110}
                         fill="#8884d8"
                         dataKey="value"
                     >
@@ -229,11 +229,10 @@ const chartData = [
                 </div>
 
           </section>
-
           {/* Aktivitas Terbaru */}
           <section>
-            <h3 className="text-xl font-semibold text-gray-600 mb-4">Aktivitas Terbaru</h3>
-            <div className="space-y-4">
+            <h3 className="text-xl font-semibold text-center text-gray-600 mb-4">Aktivitas Terbaru</h3>
+            <div className="space-y-4 max-h-[700px] overflow-y-auto pr-2 bg-white rounded-xl shadow-sm">
               {projectsData.map((project, index) => (
                 <ProjectCard key={index} {...project} />
               ))}

@@ -26,7 +26,6 @@ class DashboardController extends Controller
                 'open'        => $bugsFromClients->where('status', 'open')->count(),
                 'in_progress' => $bugsFromClients->where('status', 'in_progress')->count(),
                 'resolved'    => $bugsFromClients->where('status', 'resolved')->count(),
-                'closed'      => $bugsFromClients->where('status', 'closed')->count(),
             ];
 
         return Inertia::render('developer/dashboard', [
