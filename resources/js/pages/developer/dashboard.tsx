@@ -247,7 +247,7 @@ const StatusData = [
           {/* Aktivitas Terbaru */}
           <section>
             <h3 className="text-xl font-semibold text-center text-gray-600 mb-4">Aktivitas Terbaru</h3>
-            <div className="space-y-4 max-h-[795px] overflow-y-auto pr-2 bg-white rounded-xl shadow-sm">
+            <div className="space-y-4 max-h-[795px] overflow-y-auto pr-2 rounded-xl">
               {projectsData.map((project, index) => (
                 <ProjectCard key={index} {...project} />
               ))}
