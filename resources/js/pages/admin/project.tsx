@@ -13,7 +13,7 @@ type Project = {
     description: string | null;
     client_id: number;
     client?: { id: number; name: string };
-    bugs?: any[]; 
+    bugs?: any[];
 };
 
 type Client = {
@@ -46,7 +46,7 @@ export default function ProjectIndex() {
 
     const openDetailModal = async (project: Project) => {
         setIsLoadingDetail(true);
-        setSelectedProject(null); 
+        setSelectedProject(null);
         try {
             const response = await axios.get(route('projects.show', project.id));
             setSelectedProject(response.data.project);
@@ -144,6 +144,7 @@ export default function ProjectIndex() {
 
                 <ProjectTable
                     projects={projects}
+                    context="admin"
                     onEdit={openModalForEdit}
                     onDelete={handleDelete}
                     onDetail={openDetailModal}

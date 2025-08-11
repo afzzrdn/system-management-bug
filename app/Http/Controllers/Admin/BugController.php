@@ -37,6 +37,14 @@ class BugController extends Controller
             ->latest()
             ->get();
 
+        $bugs = $bugs->map(function ($bug) {
+                $bugArray = $bug->toArray();
+                $bugArray['attachments'] = $bug->attachments->map(function ($att) {
+                    return asset('storage/' . $att->file_path);
+                })->values();
+                return $bugArray;
+            });
+
         return Inertia::render('admin/bugs', [
             'bugs' => $bugs,
             'projects' => Project::all(),
