@@ -1,10 +1,11 @@
 import AppLayout from '@/layouts/app-layout';
 import { Head, useForm, usePage } from '@inertiajs/react';
-import { Fragment, useState } from 'react';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { Plus } from 'lucide-react';
 import ProjectDetailModal from '@/components/ProjectDetail';
 import ProjectTable from '@/components/ProjectTable';
 import ProjectFormModal from '@/components/FormProject';
+import axios from 'axios';
 
 type Project = {
     id: number;
@@ -12,6 +13,7 @@ type Project = {
     description: string | null;
     client_id: number;
     client?: { id: number; name: string };
+    bugs?: any[]; 
 };
 
 type Client = {
@@ -30,7 +32,6 @@ interface CustomPageProps {
 }
 
 export default function ProjectIndex() {
-    // --- STATE MANAGEMENT ---
     const {
         projects = [],
         clients = [],
@@ -41,9 +42,20 @@ export default function ProjectIndex() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingProjectId, setEditingProjectId] = useState<number | null>(null);
     const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+    const [isLoadingDetail, setIsLoadingDetail] = useState(false);
 
-    const openDetailModal = (project: Project) => {
-        setSelectedProject(project);
+    const openDetailModal = async (project: Project) => {
+        setIsLoadingDetail(true);
+        setSelectedProject(null); 
+        try {
+            const response = await axios.get(route('projects.show', project.id));
+            setSelectedProject(response.data.project);
+        } catch (error) {
+            console.error("Gagal memuat detail project:", error);
+            alert('Gagal memuat detail project. Silakan coba lagi.');
+        } finally {
+            setIsLoadingDetail(false);
+        }
     };
 
     const closeDetailModal = () => {
@@ -111,7 +123,6 @@ export default function ProjectIndex() {
         <AppLayout>
             <Head title="Manajemen Project" />
 
-            {/* Main Page Content */}
             <div className="p-8 max-w-full mx-auto">
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-bold text-gray-400">Management Project</h2>
@@ -119,13 +130,11 @@ export default function ProjectIndex() {
                         onClick={openModalForCreate}
                         className="inline-flex items-center gap-2 justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                     >
-                        {/* Menggunakan ikon Plus dari Lucide */}
                         <Plus size={20} />
                         Tambah Project
                     </button>
                 </div>
 
-                {/* Flash Message */}
                 {flash?.success && (
                     <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded mb-6" role="alert">
                         <p className="font-bold">Sukses</p>
@@ -133,7 +142,6 @@ export default function ProjectIndex() {
                     </div>
                 )}
 
-                {/* Projects Table */}
                 <ProjectTable
                     projects={projects}
                     onEdit={openModalForEdit}
@@ -141,7 +149,7 @@ export default function ProjectIndex() {
                     onDetail={openDetailModal}
                 />
             </div>
-            {/* Form Modal using Headless UI */}
+
             <ProjectFormModal
                 isOpen={isModalOpen}
                 onClose={closeModal}

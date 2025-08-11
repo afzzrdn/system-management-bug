@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Services\NotificationSenderService;
+use App\Services\NotificationSenderService; // Service ini diimpor tapi belum digunakan, bisa dikembangkan
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -16,24 +16,13 @@ class ProjectController extends Controller
     // Tampilkan daftar semua project
     public function index(): Response
     {
-        $projects = Project::with('client')->latest()->get();
+        // [MODIFIKASI] Tambahkan withCount('bugs') untuk menampilkan jumlah bug di halaman daftar
+        $projects = Project::with('client')->withCount('bugs')->latest()->get();
         $clients = User::where('role', UserRole::Client->value)->get();
 
         return Inertia::render('admin/project', [
             'projects' => $projects,
             'clients' => $clients,
-            'flash' => [
-                'success' => session('success'),
-            ],
-        ]);
-    }
-
-    public function create(): Response
-    {
-        $clients = User::where('role', UserRole::Client->value)->get();
-
-        return Inertia::render('admin/project', [
-            'clients' => $clients
         ]);
     }
 
@@ -48,27 +37,53 @@ class ProjectController extends Controller
 
         Project::create($validated);
 
+        // [SARAN] Di sini Anda bisa menambahkan notifikasi ke client
+        // $client = User::find($validated['client_id']);
+        // NotificationSenderService::send('Project Baru Dibuat', 'Project ' . $validated['name'] . ' telah dibuat untuk Anda.', $client);
+
         return redirect()->route('projects.index')->with('success', 'Project berhasil dibuat.');
     }
-
-    // Tampilkan detail project
-    public function show(Project $project): Response
+    
+    
+    // [MODIFIKASI UTAMA] Tampilkan detail project dengan logika lengkap
+    public function show(Project $project)
     {
-        $project->load('client', 'bugs');
-
-        return Inertia::render('admin/project', [
-            'project' => $project
+        // 1. Load relasi yang lebih detail: client dan bugs beserta attachments-nya
+        $project->load([
+            'client:id,name',
+            'bugs' => function ($query) {
+                $query->with('attachments:id,bug_id,file_path')
+                      ->orderBy('created_at', 'desc');
+            }
         ]);
-    }
 
-    // Tampilkan form edit project
-    public function edit(Project $project): Response
-    {
-        $clients = User::where('role', UserRole::Client->value)->get();
+        // 2. Tambahkan logika versioning untuk setiap bug
+        $major = 1;
+        $minor = 0;
+        $patch = 0;
+        foreach ($project->bugs as $bug) {
+            $bug->version = "{$major}.{$minor}.{$patch}";
+            $patch++;
+            if ($patch > 9) {
+                $patch = 0;
+                $minor++;
+            }
+            if ($minor > 9) {
+                $minor = 0;
+                $major++;
+            }
+        }
 
-        return Inertia::render('admin/project', [
-            'project' => $project,
-            'clients' => $clients
+        // 3. Buat URL publik untuk setiap lampiran (attachment)
+        $project->bugs->each(function ($bug) {
+            $bug->attachments->transform(function ($attachment) {
+                $attachment->file_url = url('storage/' . $attachment->file_path);
+                return $attachment;
+            });
+        });
+
+        return response()->json([
+            'project' => $project
         ]);
     }
 
@@ -92,5 +107,21 @@ class ProjectController extends Controller
         $project->delete();
 
         return redirect()->route('projects.index')->with('success', 'Project berhasil dihapus.');
+    }
+
+    // Method 'create' dan 'edit' tidak perlu diubah
+    public function create(): Response
+    {
+        $clients = User::where('role', UserRole::Client->value)->get();
+        return Inertia::render('admin/project-form', ['clients' => $clients]); // Ganti nama view jika perlu
+    }
+
+    public function edit(Project $project): Response
+    {
+        $clients = User::where('role', UserRole::Client->value)->get();
+        return Inertia::render('admin/project-form', [ // Ganti nama view jika perlu
+            'project' => $project,
+            'clients' => $clients
+        ]);
     }
 }

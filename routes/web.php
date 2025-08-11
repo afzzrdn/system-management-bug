@@ -82,6 +82,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::resource('project', ProjectController::class)->names([
         'index' => 'projects.index',
         'store' => 'projects.store',
+        'show' => 'projects.show',
         'update' => 'projects.update',
         'destroy' => 'projects.destroy',
     ])->parameters([

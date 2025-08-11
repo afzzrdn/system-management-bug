@@ -96,7 +96,6 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project, onClos
 
                                 {/* Header Info */}
                                 <div className="mt-4 space-y-3 flex gap-5">
-                                    <div className='bg-gray-700 rounded-full w-[90px] h-[90px]'></div>
                                     <div>
                                         <p className='font-semibold text-xl'>{project.name}</p>
                                         <p className='text-sm text-gray-500'>{project.client?.name || 'N/A'}</p>

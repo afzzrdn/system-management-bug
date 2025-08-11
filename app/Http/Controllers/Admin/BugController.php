@@ -16,9 +16,24 @@ use Illuminate\Support\Facades\Storage;
 
 class BugController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
-       $bugs = Bug::with(['project', 'reporter', 'assignee'])
+        $request->validate([
+            'status'     => 'nullable|string|in:open,in_progress,resolved,closed',
+            'priority'   => 'nullable|string|in:low,medium,high,critical',
+            'project_id' => 'nullable|uuid|exists:projects,id',
+        ]);
+
+        $bugs = Bug::with(['project', 'reporter', 'assignee', 'attachments'])
+            ->when($request->input('status'), function ($query, $status) {
+                $query->where('status', $status);
+            })
+            ->when($request->input('priority'), function ($query, $priority) {
+                $query->where('priority', $priority);
+            })
+            ->when($request->input('project_id'), function ($query, $projectId) {
+                $query->where('project_id', $projectId);
+            })
             ->latest()
             ->get();
 
@@ -26,6 +41,7 @@ class BugController extends Controller
             'bugs' => $bugs,
             'projects' => Project::all(),
             'users' => User::all(),
+            'filters'    => $request->only(['status', 'priority', 'project_id']),
         ]);
     }
 
@@ -42,7 +58,6 @@ class BugController extends Controller
         'attachments.*' => 'nullable|file|mimes:jpg,jpeg,png,gif,pdf|max:10240',
     ]);
 
-    // Tetapkan user yang sedang login sebagai pelapor
     $data['reported_by'] = Auth::id();
 
     $bug = Bug::create($data);
@@ -60,7 +75,6 @@ class BugController extends Controller
         }
     }
 
-    // Kirim notifikasi
     $bug->load('assignee');
 
     if ($bug->assigned_to) {

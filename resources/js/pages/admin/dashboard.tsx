@@ -98,7 +98,6 @@ export default function Dashboard({
         <div className="rounded-2xl bg-white shadow-sm">
         <div className="px-6 pt-5 pb-4">
             <h3 className=" text-xl font-semibold text-gray-800">Statistik Bug</h3>
-            <p className="mt-1 text-sm text-gray-500">Status & Prioritas</p>
         </div>
 
         <div className="px-4 md:px-6 py-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
