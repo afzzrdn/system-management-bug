@@ -6,16 +6,18 @@ type Project = {
   description: string | null;
   client_id: number;
   client?: { id: number; name: string };
+  bugs_count?: number;
 };
 
 interface Props {
   projects: Project[];
+  context: 'client' | 'admin';
   onEdit: (project: Project) => void;
   onDelete: (project: Project) => void;
   onDetail: (project: Project) => void;
 }
 
-export default function ProjectCardGrid({ projects, onEdit, onDelete, onDetail }: Props) {
+export default function ProjectCardGrid({ projects, context, onEdit, onDelete, onDetail }: Props) {
   if (projects.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-12 bg-gray-50 rounded-lg shadow-inner">
@@ -33,40 +35,38 @@ export default function ProjectCardGrid({ projects, onEdit, onDelete, onDetail }
           className="bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 flex flex-col cursor-pointer group border border-gray-200"
           onClick={() => onDetail(project)}
         >
-          {/* Bagian Konten Utama */}
           <div className="p-6 flex-grow">
             <h3 className="text-lg font-bold text-gray-800 group-hover:text-indigo-600 transition-colors duration-300 truncate">
               {project.name}
             </h3>
             <div className="flex items-center mt-2 text-sm text-gray-500">
               <User size={16} className="mr-2 flex-shrink-0" />
-              <span className="truncate">{project.client?.name ?? 'N/A'}</span>
+              {context === 'client' ? (
+                <span className="truncate">Aku</span>
+              ) : (
+                <span className="truncate">{project.client?.name ?? '-'}</span>
+              )}
             </div>
           </div>
 
-          {/* Bagian Footer untuk Aksi */}
-          <div className="border-t border-gray-100 bg-gray-50/50 px-6 py-3 flex justify-end items-center space-x-3">
-            <button
-              onClick={(e) => {
-                e.stopPropagation(); // Mencegah trigger onDetail pada card
-                onEdit(project);
-              }}
-              className="text-gray-500 hover:text-indigo-600 transition-colors duration-200"
-              title="Edit Project"
-            >
-              <Pencil size={18} />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation(); // Mencegah trigger onDetail pada card
-                onDelete(project);
-              }}
-              className="text-gray-500 hover:text-red-600 transition-colors duration-200"
-              title="Delete Project"
-            >
-              <Trash2 size={18} />
-            </button>
-          </div>
+          {context === 'admin' && (
+            <div className="border-t border-gray-100 bg-gray-50/50 px-6 py-3 flex justify-end items-center space-x-3">
+              <button
+                onClick={(e) => { e.stopPropagation(); onEdit(project); }}
+                className="text-gray-500 hover:text-indigo-600 transition-colors duration-200"
+                title="Edit Project"
+              >
+                <Pencil size={18} />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); onDelete(project); }}
+                className="text-gray-500 hover:text-red-600 transition-colors duration-200"
+                title="Delete Project"
+              >
+                <Trash2 size={18} />
+              </button>
+            </div>
+          )}
         </div>
       ))}
     </div>

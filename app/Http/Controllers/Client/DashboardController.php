@@ -25,7 +25,6 @@ class DashboardController extends Controller
         $recentBugs = Bug::with('project:id,name')
             ->whereIn('project_id', $projectIds)
             ->latest()
-            ->take(5)
             ->get()
             ->map(fn ($bug) => [
                 'id' => $bug->id,
@@ -37,7 +36,6 @@ class DashboardController extends Controller
 
         $devLogs = Bug::whereIn('project_id', $projectIds)
             ->orderBy('updated_at', 'desc')
-            ->take(5)
             ->get()
             ->map(fn ($bug) => [
                 'id' => $bug->id,
