@@ -1,6 +1,6 @@
 import { Dialog, Transition } from '@headlessui/react';
 import React, { Fragment } from 'react';
-import type { Bug } from '@/types/bugs';
+import type { Bug } from '@/types/bug';
 import type { Project } from '@/types/project';
 
 type ProjectDetailModalProps = {
@@ -134,7 +134,7 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project, onClos
                                                                     {(bug.attachments ?? []).map(att => (
                                                                         <img
                                                                             key={att.id}
-                                                                            src={att.file_url}
+                                                                            src={att.file_path}
                                                                             alt="Screenshot"
                                                                             className="w-40 h-24 rounded-lg border object-cover"
                                                                         />
