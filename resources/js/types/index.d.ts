@@ -41,3 +41,11 @@ export interface User {
     updated_at: string;
     [key: string]: unknown; // This allows for additional properties...
 }
+
+export interface RecentBug {
+    id: number;
+    title: string;
+    project: string;
+    status: 'open' | 'in_progress' | 'resolved';
+    full_bug: BugType;
+}

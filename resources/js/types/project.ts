@@ -1,5 +1,5 @@
 // types/project.ts
-import type { Bug } from './bugs';
+import type { Bug } from '@/types/bug';
 
 export type Project = {
     id: number;
