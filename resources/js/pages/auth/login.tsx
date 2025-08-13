@@ -29,14 +29,13 @@ export default function Login() {
                     />
                     <div className="relative z-10 flex flex-col justify-end h-full bg-black/25 p-10 text-white">
                         <h1 className="text-5xl font-bold">BugReport</h1>
-                        <p className="mt-3 text-lg text-gray-300">Find, Track, and Resolve. Efficiently.</p>
                     </div>
                 </div>
                 <div className="flex items-center justify-center p-8 bg-white order-2 lg:order-1">
                     <div className="w-full max-w-sm mx-auto">
                         <div className="mb-8">
-                            <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>
-                            <p className="text-gray-500 mt-2">Enter your credentials to access your account.</p>
+                            <h2 className="text-3xl font-bold text-gray-900">Selamat datang kembali!</h2>
+                            <p className="text-gray-500 mt-2">Masukkan  Email dan Password yang sudah terdaftar!</p>
                         </div>
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
@@ -68,7 +67,7 @@ export default function Login() {
                             </Button>
                         </form>
                         <div className="mt-6 text-center text-sm">
-                            <span className="text-gray-500">Don't have an account? </span>
+                            <span className="text-gray-500">Tidak punya akun? </span>
                             <Link href={route('register')} className="font-semibold text-indigo-600 hover:underline">
                                 Sign Up
                             </Link>

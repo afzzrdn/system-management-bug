@@ -1,6 +1,7 @@
-export type Project = { id: number; name: string };
-export type User = { id: number; name: string; role: 'developer' | 'client' | 'admin' };
-export type Attachment = { id: number; file_path: string; file_name: string };
+import { User } from '@/types/user';
+import { Project } from '@/types/project';
+import { Attachment } from '@/types/Attachment';
+
 export type Bug = {
     id: number;
     title: string;
