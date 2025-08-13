@@ -4,39 +4,43 @@ import AppLayout from '@/layouts/app-layout';
 import BugFormModal from '@/components/BugFormModal';
 import { Listbox, Transition } from '@headlessui/react';
 
-type Project = { id: number; name: string; };
-type User = { id: number; name: string; role: 'developer' | 'client' | 'admin'; };
+type Project = { id: number; name: string };
+type User = { id: number; name: string; role: 'developer' | 'client' | 'admin' };
 type Bug = {
   attachments: string[];
-  id: number;
+  id: string;
   title: string;
   description: string;
   priority: 'low' | 'medium' | 'high' | 'critical';
-  status: 'open' | 'in_progress' | 'resolved';
-  project_id: number;
-  reported_by: number;
-  assigned_to?: number | null;
+  status: 'open' | 'in_progress' | 'resolved' | 'closed';
+  type: 'Tampilan' | 'Performa' | 'Fitur' | 'Keamanan' | 'Error' | 'Lainnya';
+  project_id: string;
+  reported_by: string;
+  assigned_to?: string | null;
   resolved_at?: string | null;
   project?: Project;
   reporter?: User;
   assignee?: User;
 };
+
 type PageProps = {
   bugs: Bug[];
   projects: Project[];
   users: User[];
-  filters?: { status?: string; project_id?: string; priority?: string; };
+  filters?: { status?: string; project_id?: string; priority?: string; type?: string };
 };
+
 type BugFormData = {
   title: string;
   description: string;
   priority: 'low' | 'medium' | 'high' | 'critical';
-  status: 'open' | 'in_progress' | 'resolved';
-  attachments: File[];
-  project_id: string;
-  reported_by: string;
-  assigned_to: string;
-  resolved_at: string;
+  status: 'open' | 'in_progress' | 'resolved' | 'closed';
+  type: 'Tampilan' | 'Performa' | 'Fitur' | 'Keamanan' | 'Error' | 'Lainnya' | '';
+  attachments: (File | string | null)[];
+  project_id: string | number;
+  reported_by: string | number;
+  assigned_to: string | number;
+  resolved_at: string | null;
 };
 
 export default function Bugs() {
@@ -44,10 +48,23 @@ export default function Bugs() {
   const [activeTab, setActiveTab] = useState<'details' | 'attachments'>('details');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBug, setEditingBug] = useState<Bug | null>(null);
-  const [filters, setFilters] = useState({ status: initialFilters.status || '', project_id: initialFilters.project_id || '', priority: initialFilters.priority || '' });
+  const [filters, setFilters] = useState({ status: initialFilters.status || '', project_id: initialFilters.project_id || '', priority: initialFilters.priority || '', type: initialFilters.type || '' });
   const [previewSrc, setPreviewSrc] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const initialFormValues: BugFormData = { title: '', description: '', priority: 'low', status: 'open', attachments: [], project_id: '', reported_by: '', assigned_to: '', resolved_at: '' };
+
+  const initialFormValues: BugFormData = {
+    title: '',
+    description: '',
+    priority: 'low',
+    status: 'open',
+    type: '',
+    attachments: [],
+    project_id: '',
+    reported_by: '',
+    assigned_to: '',
+    resolved_at: ''
+  };
+
   const form = useForm(initialFormValues);
   const isEditing = editingBug !== null;
 
@@ -57,23 +74,31 @@ export default function Bugs() {
     high: 'bg-orange-100 text-orange-800 ring-1 ring-inset ring-orange-200',
     critical: 'bg-red-100 text-red-800 ring-1 ring-inset ring-red-200',
   };
+
   const statusInfo = {
     open: { text: 'Open', class: 'text-blue-600 bg-blue-100' },
     in_progress: { text: 'In Progress', class: 'text-yellow-600 bg-yellow-100' },
     resolved: { text: 'Resolved', class: 'text-green-600 bg-green-100' },
+    closed: { text: 'Closed', class: 'text-slate-700 bg-slate-100' },
   };
+
+  const bugTypes = ['Tampilan', 'Performa', 'Fitur', 'Keamanan', 'Error', 'Lainnya'];
 
   useEffect(() => {
     const activeFilters = Object.fromEntries(Object.entries(filters).filter(([, v]) => v !== ''));
     router.get(route('bugs.index'), activeFilters, { preserveState: true, replace: true, only: ['bugs', 'filters'] });
   }, [filters]);
 
-  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFilters(prev => ({ ...prev, [name]: value }));
+  const resetFilters = () => setFilters({ status: '', project_id: '', priority: '', type: '' });
+
+  const openAddModal = () => {
+    setEditingBug(null);
+    form.reset();
+    form.setData('type', '');
+    setActiveTab('details');
+    setIsModalOpen(true);
   };
-  const resetFilters = () => setFilters({ status: '', project_id: '', priority: '' });
-  const openAddModal = () => { setEditingBug(null); form.reset(); setActiveTab('details'); setIsModalOpen(true); };
+
   const openEditModal = (bug: Bug) => {
     setEditingBug(bug);
     form.setData({
@@ -81,6 +106,7 @@ export default function Bugs() {
       description: bug.description,
       priority: bug.priority,
       status: bug.status,
+      type: bug.type,
       attachments: [],
       project_id: String(bug.project_id),
       reported_by: String(bug.reported_by),
@@ -90,20 +116,30 @@ export default function Bugs() {
     setActiveTab('details');
     setIsModalOpen(true);
   };
+
   const closeModal = () => setIsModalOpen(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const onFinish = () => { form.reset(); setActiveTab('details'); closeModal(); };
+    const onFinish = () => {
+      form.reset();
+      setActiveTab('details');
+      closeModal();
+    };
     const options = { onSuccess: onFinish, forceFormData: true };
-    if (isEditing) { form.transform(d => ({ ...d, _method: 'PUT' })); form.post(route('bugs.update', editingBug!.id), options); }
-    else { form.post(route('bugs.store'), options); }
+    if (isEditing) {
+      form.transform(d => ({ ...d, _method: 'PUT' }));
+      form.post(route('bugs.update', editingBug!.id), options);
+    } else {
+      form.post(route('bugs.store'), options);
+    }
   };
 
-  const handleDelete = (id: number) => { if (confirm('Yakin ingin menghapus bug ini?')) router.delete(route('bugs.destroy', id)); };
+  const handleDelete = (id: string) => {
+    if (confirm('Yakin ingin menghapus bug ini?')) router.delete(route('bugs.destroy', id));
+  };
 
   const isImageUrl = (url: string) => /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(url);
-  const openAttachment = (url: string) => { if (isImageUrl(url)) setPreviewSrc(url); else window.open(url, '_blank'); };
 
   return (
     <AppLayout>
@@ -172,9 +208,31 @@ export default function Bugs() {
                 </div>
               </Listbox>
             </div>
+
+            <div className="lg:col-span-2">
+              <Listbox value={filters.type} onChange={(value) => setFilters(prev => ({ ...prev, type: value as string }))}>
+                <div className="relative">
+                  <Listbox.Label className="text-sm font-medium text-slate-700 block mb-2">Jenis Bug</Listbox.Label>
+                  <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left border border-slate-300 shadow-sm focus:outline-none sm:text-sm">
+                    <span className="block truncate">{filters.type || 'Semua Jenis'}</span>
+                    <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-gray-400"><path fillRule="evenodd" d="M10 3a.75.75 0 01.53.22l3.5 3.5a.75.75 0 01-1.06 1.06L10 4.81 6.53 8.28a.75.75 0 01-1.06-1.06l3.5-3.5A.75.75 0 0110 3zm-3.72 9.28a.75.75 0 011.06 0L10 15.19l3.47-3.47a.75.75 0 111.06 1.06l-4 4a.75.75 0 01-1.06 0l-4-4a.75.75 0 010-1.06z" clipRule="evenodd" /></svg>
+                    </span>
+                  </Listbox.Button>
+                  <Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
+                    <Listbox.Options className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm z-10">
+                      <Listbox.Option value="" className={({ active }) => `relative cursor-default select-none py-2 pl-10 pr-4 ${active ? 'bg-indigo-100 text-indigo-900' : 'text-gray-900'}`}><span className="block truncate">Semua Jenis</span></Listbox.Option>
+                      {bugTypes.map((t) => (
+                        <Listbox.Option key={t} value={t} className={({ active }) => `relative cursor-default select-none py-2 pl-10 pr-4 ${active ? 'bg-indigo-100 text-indigo-900' : 'text-gray-900'}`}><span className="block truncate">{t}</span></Listbox.Option>
+                      ))}
+                    </Listbox.Options>
+                  </Transition>
+                </div>
+              </Listbox>
+            </div>
           </div>
 
-          {(filters.status || filters.project_id || filters.priority) && (
+          {(filters.status || filters.project_id || filters.priority || filters.type) && (
             <div className="mt-4 pt-4 border-t border-slate-200 flex justify-end">
               <button onClick={resetFilters} className="inline-flex items-center gap-x-2 px-3 py-2 text-sm font-semibold text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0011.664 0l3.18-3.185m-4.992-2.686h-4.992v.001M21.015 4.356v4.992m0 0h-4.992m4.992 0l-3.182-3.182a8.25 8.25 0 00-11.664 0L3.986 9.348" /></svg>
@@ -191,11 +249,14 @@ export default function Bugs() {
                 <div className="p-6 flex-grow">
                   <div className="flex justify-between items-start gap-4">
                     <h3 className="text-lg font-bold text-slate-800 pr-2">{bug.title}</h3>
-                    <span className={`px-2.5 py-1 text-xs font-semibold rounded-full capitalize whitespace-nowrap ${priorityClasses[bug.priority]}`}>{bug.priority}</span>
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2.5 py-1 text-xs font-semibold rounded-full capitalize whitespace-nowrap ${priorityClasses[bug.priority]}`}>{bug.priority}</span>
+                      <span className="px-2.5 py-1 text-xs font-semibold rounded-full whitespace-nowrap bg-slate-100 text-slate-700">{bug.type}</span>
+                    </div>
                   </div>
                   <div className="mt-6 space-y-4 text-sm">
                     <div className="flex items-center space-x-5">
-                      <span className="font-semibold text-slate-500">Status: </span>
+                      <span className="font-semibold text-slate-500">Status:</span>
                       <span className={`px-2 py-0.5 text-xs font-medium rounded-md ${statusInfo[bug.status].class}`}>{statusInfo[bug.status].text}</span>
                     </div>
                     <div className="flex items-center gap-x-3">
@@ -208,20 +269,23 @@ export default function Bugs() {
                       <span className="text-slate-600">Dibuat oleh: <span className="font-medium text-slate-800">{bug.reporter?.name ?? 'N/A'}</span></span>
                     </div>
                     {bug.attachments && bug.attachments.length > 0 && (
-                        <div className="pt-4">
-                            <span className="block text-sm font-semibold text-slate-700 mb-2">Lampiran:</span>
-                            <div className="flex gap-2 flex-wrap">
-                                {bug.attachments.map((file, i) => (
-                                    <button
-                                        key={i}
-                                        onClick={() => setPreviewImage(file)}
-                                        className="text-blue-600 underline text-sm hover:text-blue-800"
-                                    >
-                                        Lampiran {i + 1}
-                                    </button>
-                                ))}
-                            </div>
+                      <div className="pt-4">
+                        <span className="block text-sm font-semibold text-slate-700 mb-2">Lampiran:</span>
+                        <div className="flex gap-2 flex-wrap">
+                          {bug.attachments.map((file, i) => (
+                            <button
+                              key={i}
+                              onClick={() => {
+                                if (isImageUrl(file)) setPreviewImage(file);
+                                else window.open(file, '_blank');
+                              }}
+                              className="text-blue-600 underline text-sm hover:text-blue-800"
+                            >
+                              Lampiran {i + 1}
+                            </button>
+                          ))}
                         </div>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -244,7 +308,7 @@ export default function Bugs() {
           onClose={closeModal}
           onSubmit={handleSubmit}
           isEditing={isEditing}
-          form={form}
+          form={form as any}
           projects={projects}
           users={users}
           activeTab={activeTab}
@@ -259,20 +323,20 @@ export default function Bugs() {
           </div>
         </div>
       )}
+
       {previewImage && (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-        <div className="bg-white p-4 rounded-lg max-w-3xl max-h-[90vh] overflow-auto">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-white p-4 rounded-lg max-w-3xl max-h-[90vh] overflow-auto">
             <img src={previewImage} alt="Preview" className="max-w-full h-auto rounded" />
             <button
-                onClick={() => setPreviewImage(null)}
-                className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+              onClick={() => setPreviewImage(null)}
+              className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
             >
-                Tutup
+              Tutup
             </button>
+          </div>
         </div>
-    </div>
-)}
-
+      )}
     </AppLayout>
   );
 }
