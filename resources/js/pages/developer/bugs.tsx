@@ -34,7 +34,7 @@ export default function DeveloperBugsPage() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedBug, setSelectedBug] = useState<Bug | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<StatusFilter>('all');
-  const [loadingDetail, setLoadingDetail] = useState(false);
+  const [setLoadingDetail] = useState(false);
   const [q, setQ] = useState('');
 
   const openDetailModal = async (bugId: number) => {
@@ -74,7 +74,7 @@ export default function DeveloperBugsPage() {
     <AppLayout>
       <Head title="Bug" />
       <div className="p-8">
-        <h1 className="text-2xl font-semibold text-gray-400 mb-6">Management Bug</h1>
+        <h1 className="text-2xl font-semibold text-gray-400">Management Bug</h1>
       </div>
 
       <div className="p-4 space-y-6">
