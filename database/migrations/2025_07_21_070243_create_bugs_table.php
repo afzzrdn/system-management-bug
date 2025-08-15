@@ -12,7 +12,7 @@ return new class extends Migration {
             $table->string('title');
             $table->text('description')->nullable();
             $table->enum('priority', ['low', 'medium', 'high', 'critical']);
-            $table->enum('status', ['open', 'in_progress', 'resolved', 'closed']);
+            $table->enum('status', ['open', 'in_progress', 'resolved']);
 
             $table->uuid('project_id');
             $table->uuid('reported_by');

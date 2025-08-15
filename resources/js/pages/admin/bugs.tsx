@@ -4,8 +4,8 @@ import AppLayout from '@/layouts/app-layout';
 import BugFormModal from '@/components/BugFormModal';
 import { Listbox, Transition } from '@headlessui/react';
 
-type Project = { id: number; name: string };
-type User = { id: number; name: string; role: 'developer' | 'client' | 'admin' };
+type Project = { id: number | string; name: string };
+type User = { id: number | string; name: string; role: 'developer' | 'client' | 'admin' };
 type Bug = {
   attachments: string[];
   id: string;
@@ -18,6 +18,8 @@ type Bug = {
   reported_by: string;
   assigned_to?: string | null;
   resolved_at?: string | null;
+  schedule_start_at?: string | null;
+  due_at?: string | null;
   project?: Project;
   reporter?: User;
   assignee?: User;
@@ -41,18 +43,17 @@ type BugFormData = {
   reported_by: string | number;
   assigned_to: string | number;
   resolved_at: string | null;
+  due_at: string | null;
 };
 
 export default function Bugs() {
   const { bugs, projects, users, filters: initialFilters = {} } = usePage<PageProps>().props;
-  const [activeTab, setActiveTab] = useState<'details' | 'attachments'>('details');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBug, setEditingBug] = useState<Bug | null>(null);
   const [filters, setFilters] = useState({ status: initialFilters.status || '', project_id: initialFilters.project_id || '', priority: initialFilters.priority || '', type: initialFilters.type || '' });
-  const [previewSrc, setPreviewSrc] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-  const initialFormValues: BugFormData = {
+  const initialFormValues: Omit<BugFormData, 'schedule_start_at' | 'delay_reason'> = {
     title: '',
     description: '',
     priority: 'low',
@@ -62,26 +63,15 @@ export default function Bugs() {
     project_id: '',
     reported_by: '',
     assigned_to: '',
-    resolved_at: ''
+    resolved_at: null,
+    due_at: null,
   };
 
   const form = useForm(initialFormValues);
   const isEditing = editingBug !== null;
 
-  const priorityClasses = {
-    low: 'bg-blue-100 text-blue-800 ring-1 ring-inset ring-blue-200',
-    medium: 'bg-yellow-100 text-yellow-800 ring-1 ring-inset ring-yellow-200',
-    high: 'bg-orange-100 text-orange-800 ring-1 ring-inset ring-orange-200',
-    critical: 'bg-red-100 text-red-800 ring-1 ring-inset ring-red-200',
-  };
-
-  const statusInfo = {
-    open: { text: 'Open', class: 'text-blue-600 bg-blue-100' },
-    in_progress: { text: 'In Progress', class: 'text-yellow-600 bg-yellow-100' },
-    resolved: { text: 'Resolved', class: 'text-green-600 bg-green-100' },
-    closed: { text: 'Closed', class: 'text-slate-700 bg-slate-100' },
-  };
-
+  const priorityClasses = { low: 'bg-blue-100 text-blue-800 ring-1 ring-inset ring-blue-200', medium: 'bg-yellow-100 text-yellow-800 ring-1 ring-inset ring-yellow-200', high: 'bg-orange-100 text-orange-800 ring-1 ring-inset ring-orange-200', critical: 'bg-red-100 text-red-800 ring-1 ring-inset ring-red-200' };
+  const statusInfo = { open: { text: 'Open', class: 'text-blue-600 bg-blue-100' }, in_progress: { text: 'In Progress', class: 'text-yellow-600 bg-yellow-100' }, resolved: { text: 'Resolved', class: 'text-green-600 bg-green-100' }, closed: { text: 'Closed', class: 'text-slate-700 bg-slate-100' } };
   const bugTypes = ['Tampilan', 'Performa', 'Fitur', 'Keamanan', 'Error', 'Lainnya'];
 
   useEffect(() => {
@@ -95,7 +85,6 @@ export default function Bugs() {
     setEditingBug(null);
     form.reset();
     form.setData('type', '');
-    setActiveTab('details');
     setIsModalOpen(true);
   };
 
@@ -105,15 +94,15 @@ export default function Bugs() {
       title: bug.title,
       description: bug.description,
       priority: bug.priority,
-      status: bug.status,
+      status: bug.status, // Tetap ada di data, tapi tidak di form
       type: bug.type,
       attachments: [],
       project_id: String(bug.project_id),
       reported_by: String(bug.reported_by),
       assigned_to: bug.assigned_to ? String(bug.assigned_to) : '',
-      resolved_at: bug.resolved_at ?? ''
+      resolved_at: bug.resolved_at ?? null,
+      due_at: bug.due_at ?? null,
     });
-    setActiveTab('details');
     setIsModalOpen(true);
   };
 
@@ -121,11 +110,7 @@ export default function Bugs() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const onFinish = () => {
-      form.reset();
-      setActiveTab('details');
-      closeModal();
-    };
+    const onFinish = () => { form.reset(); closeModal(); };
     const options = { onSuccess: onFinish, forceFormData: true };
     if (isEditing) {
       form.transform(d => ({ ...d, _method: 'PUT' }));
@@ -152,96 +137,67 @@ export default function Bugs() {
             <span>Tambah Bug</span>
           </button>
         </div>
-
         <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-6 items-end">
             <div className="lg:col-span-2">
               <label className="text-sm font-medium text-slate-700 block mb-2">Filter by Status</label>
               <div className="flex flex-wrap gap-2">
                 <button type="button" onClick={() => setFilters(prev => ({ ...prev, status: '' }))} className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${filters.status === '' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}>Semua</button>
-                {Object.entries(statusInfo).map(([key, { text }]) => (
-                  <button key={key} type="button" onClick={() => setFilters(prev => ({ ...prev, status: key }))} className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${filters.status === key ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}>{text}</button>
-                ))}
+                {Object.entries(statusInfo).map(([key, { text }]) => (<button key={key} type="button" onClick={() => setFilters(prev => ({ ...prev, status: key }))} className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${filters.status === key ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}>{text}</button>))}
               </div>
             </div>
-
             <div>
               <Listbox value={filters.priority} onChange={(value) => setFilters(prev => ({ ...prev, priority: value as string }))}>
                 <div className="relative">
                   <Listbox.Label className="text-sm font-medium text-slate-700 block mb-2">Prioritas</Listbox.Label>
-                  <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left border border-slate-300 shadow-sm focus:outline-none sm:text-sm">
-                    <span className="block truncate capitalize">{filters.priority || 'Semua Prioritas'}</span>
-                    <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-gray-400"><path fillRule="evenodd" d="M10 3a.75.75 0 01.53.22l3.5 3.5a.75.75 0 01-1.06 1.06L10 4.81 6.53 8.28a.75.75 0 01-1.06-1.06l3.5-3.5A.75.75 0 0110 3zm-3.72 9.28a.75.75 0 011.06 0L10 15.19l3.47-3.47a.75.75 0 111.06 1.06l-4 4a.75.75 0 01-1.06 0l-4-4a.75.75 0 010-1.06z" clipRule="evenodd" /></svg>
-                    </span>
-                  </Listbox.Button>
+                  <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left border border-slate-300 shadow-sm focus:outline-none sm:text-sm"><span className="block truncate capitalize">{filters.priority || 'Semua Prioritas'}</span><span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-gray-400"><path fillRule="evenodd" d="M10 3a.75.75 0 01.53.22l3.5 3.5a.75.75 0 01-1.06 1.06L10 4.81 6.53 8.28a.75.75 0 01-1.06-1.06l3.5-3.5A.75.75 0 0110 3zm-3.72 9.28a.75.75 0 011.06 0L10 15.19l3.47-3.47a.75.75 0 111.06 1.06l-4 4a.75.75 0 01-1.06 0l-4-4a.75.75 0 010-1.06z" clipRule="evenodd" /></svg></span></Listbox.Button>
                   <Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
                     <Listbox.Options className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm z-10">
                       <Listbox.Option value="" className={({ active }) => `relative cursor-default select-none py-2 pl-10 pr-4 ${active ? 'bg-indigo-100 text-indigo-900' : 'text-gray-900'}`}><span className="block truncate">Semua Prioritas</span></Listbox.Option>
-                      {Object.keys(priorityClasses).map((prio) => (
-                        <Listbox.Option key={prio} value={prio} className={({ active }) => `relative cursor-default select-none py-2 pl-10 pr-4 ${active ? 'bg-indigo-100 text-indigo-900' : 'text-gray-900'}`}><span className="block truncate capitalize">{prio}</span></Listbox.Option>
-                      ))}
+                      {Object.keys(priorityClasses).map((prio) => (<Listbox.Option key={prio} value={prio} className={({ active }) => `relative cursor-default select-none py-2 pl-10 pr-4 ${active ? 'bg-indigo-100 text-indigo-900' : 'text-gray-900'}`}><span className="block truncate capitalize">{prio}</span></Listbox.Option>))}
                     </Listbox.Options>
                   </Transition>
                 </div>
               </Listbox>
             </div>
-
             <div>
               <Listbox value={filters.project_id} onChange={(value) => setFilters(prev => ({ ...prev, project_id: value as string }))}>
                 <div className="relative">
                   <Listbox.Label className="text-sm font-medium text-slate-700 block mb-2">Proyek</Listbox.Label>
-                  <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left border border-slate-300 shadow-sm focus:outline-none sm:text-sm">
-                    <span className="block truncate">{projects.find(p => String(p.id) === filters.project_id)?.name || 'Semua Proyek'}</span>
-                    <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-gray-400"><path fillRule="evenodd" d="M10 3a.75.75 0 01.53.22l3.5 3.5a.75.75 0 01-1.06 1.06L10 4.81 6.53 8.28a.75.75 0 01-1.06-1.06l3.5-3.5A.75.75 0 0110 3zm-3.72 9.28a.75.75 0 011.06 0L10 15.19l3.47-3.47a.75.75 0 111.06 1.06l-4 4a.75.75 0 01-1.06 0l-4-4a.75.75 0 010-1.06z" clipRule="evenodd" /></svg>
-                    </span>
-                  </Listbox.Button>
+                  <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left border border-slate-300 shadow-sm focus:outline-none sm:text-sm"><span className="block truncate">{projects.find(p => String(p.id) === filters.project_id)?.name || 'Semua Proyek'}</span><span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-gray-400"><path fillRule="evenodd" d="M10 3a.75.75 0 01.53.22l3.5 3.5a.75.75 0 01-1.06 1.06L10 4.81 6.53 8.28a.75.75 0 01-1.06-1.06l3.5-3.5A.75.75 0 0110 3zm-3.72 9.28a.75.75 0 011.06 0L10 15.19l3.47-3.47a.75.75 0 111.06 1.06l-4 4a.75.75 0 01-1.06 0l-4-4a.75.75 0 010-1.06z" clipRule="evenodd" /></svg></span></Listbox.Button>
                   <Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
                     <Listbox.Options className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm z-10">
                       <Listbox.Option value="" className={({ active }) => `relative cursor-default select-none py-2 pl-10 pr-4 ${active ? 'bg-indigo-100 text-indigo-900' : 'text-gray-900'}`}><span className="block truncate">Semua Proyek</span></Listbox.Option>
-                      {projects.map((project) => (
-                        <Listbox.Option key={project.id} value={String(project.id)} className={({ active }) => `relative cursor-default select-none py-2 pl-10 pr-4 ${active ? 'bg-indigo-100 text-indigo-900' : 'text-gray-900'}`}><span className="block truncate">{project.name}</span></Listbox.Option>
-                      ))}
+                      {projects.map((project) => (<Listbox.Option key={project.id} value={String(project.id)} className={({ active }) => `relative cursor-default select-none py-2 pl-10 pr-4 ${active ? 'bg-indigo-100 text-indigo-900' : 'text-gray-900'}`}><span className="block truncate">{project.name}</span></Listbox.Option>))}
                     </Listbox.Options>
                   </Transition>
                 </div>
               </Listbox>
             </div>
-
             <div className="lg:col-span-2">
               <Listbox value={filters.type} onChange={(value) => setFilters(prev => ({ ...prev, type: value as string }))}>
                 <div className="relative">
                   <Listbox.Label className="text-sm font-medium text-slate-700 block mb-2">Jenis Bug</Listbox.Label>
-                  <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left border border-slate-300 shadow-sm focus:outline-none sm:text-sm">
-                    <span className="block truncate">{filters.type || 'Semua Jenis'}</span>
-                    <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-gray-400"><path fillRule="evenodd" d="M10 3a.75.75 0 01.53.22l3.5 3.5a.75.75 0 01-1.06 1.06L10 4.81 6.53 8.28a.75.75 0 01-1.06-1.06l3.5-3.5A.75.75 0 0110 3zm-3.72 9.28a.75.75 0 011.06 0L10 15.19l3.47-3.47a.75.75 0 111.06 1.06l-4 4a.75.75 0 01-1.06 0l-4-4a.75.75 0 010-1.06z" clipRule="evenodd" /></svg>
-                    </span>
-                  </Listbox.Button>
+                  <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left border border-slate-300 shadow-sm focus:outline-none sm:text-sm"><span className="block truncate">{filters.type || 'Semua Jenis'}</span><span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-gray-400"><path fillRule="evenodd" d="M10 3a.75.75 0 01.53.22l3.5 3.5a.75.75 0 01-1.06 1.06L10 4.81 6.53 8.28a.75.75 0 01-1.06-1.06l3.5-3.5A.75.75 0 0110 3zm-3.72 9.28a.75.75 0 011.06 0L10 15.19l3.47-3.47a.75.75 0 111.06 1.06l-4 4a.75.75 0 01-1.06 0l-4-4a.75.75 0 010-1.06z" clipRule="evenodd" /></svg></span></Listbox.Button>
                   <Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
                     <Listbox.Options className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm z-10">
                       <Listbox.Option value="" className={({ active }) => `relative cursor-default select-none py-2 pl-10 pr-4 ${active ? 'bg-indigo-100 text-indigo-900' : 'text-gray-900'}`}><span className="block truncate">Semua Jenis</span></Listbox.Option>
-                      {bugTypes.map((t) => (
-                        <Listbox.Option key={t} value={t} className={({ active }) => `relative cursor-default select-none py-2 pl-10 pr-4 ${active ? 'bg-indigo-100 text-indigo-900' : 'text-gray-900'}`}><span className="block truncate">{t}</span></Listbox.Option>
-                      ))}
+                      {bugTypes.map((t) => (<Listbox.Option key={t} value={t} className={({ active }) => `relative cursor-default select-none py-2 pl-10 pr-4 ${active ? 'bg-indigo-100 text-indigo-900' : 'text-gray-900'}`}><span className="block truncate">{t}</span></Listbox.Option>))}
                     </Listbox.Options>
                   </Transition>
                 </div>
               </Listbox>
             </div>
           </div>
-
           {(filters.status || filters.project_id || filters.priority || filters.type) && (
             <div className="mt-4 pt-4 border-t border-slate-200 flex justify-end">
               <button onClick={resetFilters} className="inline-flex items-center gap-x-2 px-3 py-2 text-sm font-semibold text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0011.664 0l3.18-3.185m-4.992-2.686h-4.992v.001M21.015 4.356v4.992m0 0h-4.992m4.992 0l-3.182-3.182a8.25 8.25 0 00-11.664 0L3.986 9.348" /></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0011.664 0l3.18-3.185m-4.992-2.686h-4.992v.001M21.015 4.356v4.992m0 0h-4.992m0 0l-3.182-3.182a8.25 8.25 0 00-11.664 0L3.986 9.348" /></svg>
                 Reset Filter
               </button>
             </div>
           )}
         </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {bugs.length > 0 ? (
             bugs.map((bug) => (
@@ -255,35 +211,19 @@ export default function Bugs() {
                     </div>
                   </div>
                   <div className="mt-6 space-y-4 text-sm">
-                    <div className="flex items-center space-x-5">
-                      <span className="font-semibold text-slate-500">Status:</span>
-                      <span className={`px-2 py-0.5 text-xs font-medium rounded-md ${statusInfo[bug.status].class}`}>{statusInfo[bug.status].text}</span>
-                    </div>
+                    <div className="flex items-center space-x-5"><span className="font-semibold text-slate-500">Status:</span><span className={`px-2 py-0.5 text-xs font-medium rounded-md ${statusInfo[bug.status].class}`}>{statusInfo[bug.status].text}</span></div>
+                    <div className="flex items-center gap-x-3"><span className="text-slate-600">Nama Project: <span className="font-medium text-slate-800">{bug.project?.name ?? 'N/A'}</span></span></div>
+                    <div className="flex items-center gap-x-3"><span className="text-slate-600">Ditugaskan ke: <span className="font-medium text-slate-800">{bug.assignee?.name ?? 'Belum ada'}</span></span></div>
                     <div className="flex items-center gap-x-3">
-                      <span className="text-slate-600">Nama Project: <span className="font-medium text-slate-800">{bug.project?.name ?? 'N/A'}</span></span>
+                      <span className="text-slate-600">Jadwal: <span className="font-medium text-slate-800">{bug.schedule_start_at ? new Date(bug.schedule_start_at).toLocaleString() : '-'} → {bug.due_at ? new Date(bug.due_at).toLocaleString() : '-'}</span></span>
+                      {bug.due_at && ['open','in_progress'].includes(bug.status) && (new Date(bug.due_at).getTime() < Date.now()) && (<span className="ml-2 px-2 py-0.5 text-xs font-semibold rounded bg-red-100 text-red-700">Overdue</span>)}
                     </div>
-                    <div className="flex items-center gap-x-3">
-                      <span className="text-slate-600">Ditugaskan ke: <span className="font-medium text-slate-800">{bug.assignee?.name ?? 'Belum ada'}</span></span>
-                    </div>
-                    <div className="flex items-center gap-x-3">
-                      <span className="text-slate-600">Dibuat oleh: <span className="font-medium text-slate-800">{bug.reporter?.name ?? 'N/A'}</span></span>
-                    </div>
+                    <div className="flex items-center gap-x-3"><span className="text-slate-600">Selesai: <span className="font-medium text-slate-800">{bug.resolved_at ? new Date(bug.resolved_at).toLocaleString() : '-'}</span></span></div>
                     {bug.attachments && bug.attachments.length > 0 && (
                       <div className="pt-4">
                         <span className="block text-sm font-semibold text-slate-700 mb-2">Lampiran:</span>
                         <div className="flex gap-2 flex-wrap">
-                          {bug.attachments.map((file, i) => (
-                            <button
-                              key={i}
-                              onClick={() => {
-                                if (isImageUrl(file)) setPreviewImage(file);
-                                else window.open(file, '_blank');
-                              }}
-                              className="text-blue-600 underline text-sm hover:text-blue-800"
-                            >
-                              Lampiran {i + 1}
-                            </button>
-                          ))}
+                          {bug.attachments.map((file, i) => (<button key={i} onClick={() => { if (isImageUrl(file)) setPreviewImage(file); else window.open(file, '_blank'); }} className="text-blue-600 underline text-sm hover:text-blue-800">Lampiran {i + 1}</button>))}
                         </div>
                       </div>
                     )}
@@ -302,38 +242,13 @@ export default function Bugs() {
             </div>
           )}
         </div>
-
-        <BugFormModal
-          isOpen={isModalOpen}
-          onClose={closeModal}
-          onSubmit={handleSubmit}
-          isEditing={isEditing}
-          form={form as any}
-          projects={projects}
-          users={users}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-        />
+        <BugFormModal isOpen={isModalOpen} onClose={closeModal} onSubmit={handleSubmit} isEditing={isEditing} form={form as any} projects={projects} users={users} />
       </div>
-
-      {previewSrc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={() => setPreviewSrc(null)}>
-          <div className="max-w-5xl max-h-[85vh]">
-            <img src={previewSrc} alt="Preview" className="max-h-[85vh] w-auto rounded-xl shadow-2xl" />
-          </div>
-        </div>
-      )}
-
       {previewImage && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="bg-white p-4 rounded-lg max-w-3xl max-h-[90vh] overflow-auto">
             <img src={previewImage} alt="Preview" className="max-w-full h-auto rounded" />
-            <button
-              onClick={() => setPreviewImage(null)}
-              className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-            >
-              Tutup
-            </button>
+            <button onClick={() => setPreviewImage(null)} className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Tutup</button>
           </div>
         </div>
       )}
