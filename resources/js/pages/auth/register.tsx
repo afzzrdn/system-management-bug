@@ -111,7 +111,7 @@ export default function Register() {
                     />
                     <div className="relative z-10 flex flex-col justify-end h-full bg-black/25 p-10 text-white">
                         <h1 className="text-5xl font-bold">BugReport</h1>
-                    </div>
+`                    </div>
                 </div>
             </div>
         </>

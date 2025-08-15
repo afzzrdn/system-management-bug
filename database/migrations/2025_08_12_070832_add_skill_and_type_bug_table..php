@@ -8,7 +8,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('bugs', function (Blueprint $table) {
-            $table->string('type')->default('other')->after('status');
+            $table->string('type')->default('Lainnya')->after('status');
         });
 
         Schema::table('users', function (Blueprint $table) {
