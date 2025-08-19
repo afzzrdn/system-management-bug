@@ -7,27 +7,19 @@ use App\Services\NotificationSenderService;
 use App\Models\Bug;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class BugController extends Controller
 {
     public function index()
     {
         $developerId = Auth::id();
-
-        // 1. Ambil semua bug yang ditugaskan ke developer ini
-        $bugs = Bug::with(['project', 'reporter', 'attachments'])
-            ->where('assigned_to', $developerId)
-            ->latest()
-            ->get();
-
-        // 2. Hitung statistik untuk kartu di bagian atas
+        $bugs = Bug::with(['project', 'reporter', 'attachments'])->where('assigned_to', $developerId)->latest()->get();
         $stats = [
             'assigned' => Bug::where('assigned_to', $developerId)->where('status', 'open')->count(),
             'in_progress' => Bug::where('assigned_to', $developerId)->where('status', 'in_progress')->count(),
             'resolved' => Bug::where('assigned_to', $developerId)->where('status', 'resolved')->count(),
         ];
-
-        // 3. Kirim data ke view Inertia
         return inertia('developer/bugs', [
             'bugs' => $bugs,
             'stats' => $stats,
@@ -41,32 +33,43 @@ class BugController extends Controller
             abort(403, 'Akses ditolak');
         }
 
-        $request->validate([
-            'status' => 'required|in:open,in_progress,resolved,closed',
-        ]);
+        $request->validate(['status' => 'required|in:open,in_progress,resolved,closed']);
 
-        $bug->update([
-            'status' => $request->status,
-        ]);
+        $prevStatus = $bug->status;
+        $newStatus = $request->status;
 
-        $bug->load('reporter');
+        $bug->status = $newStatus;
 
-        if ($bug->reporter) {
-            $statusText = match ($bug->status) {
-                'open' => 'dibuka',
-                'in_progress' => 'sedang ditangani',
-                'resolved' => 'telah diselesaikan',
-                'closed' => 'ditutup',
-                default => $bug->status,
-            };
-
-            $sender->sendToUser(
-                $bug->reporter,
-                'Status Bug Diperbarui',
-                "Status bug \"{$bug->title}\" telah diperbarui menjadi *{$statusText}* oleh developer."
-            );
+        if ($newStatus === 'in_progress' && $prevStatus !== 'in_progress' && !$bug->schedule_start_at) {
+            $bug->schedule_start_at = Carbon::now();
         }
 
+        if ($newStatus === 'resolved' && !$bug->resolved_at) {
+            $bug->resolved_at = Carbon::now();
+        }
+
+        $bug->save();
+        $bug->load('reporter','project');
+
+        if ($bug->reporter) {
+            if ($bug->status === 'resolved') {
+                if ($bug->due_at && $bug->resolved_at && $bug->resolved_at->lte($bug->due_at)) {
+                    $sender->sendToUser($bug->reporter, 'Bug Selesai Sesuai Jadwal', "Bug \"{$bug->title}\" pada project {$bug->project?->name} telah diselesaikan tepat waktu.");
+                } else {
+                    $sender->sendToUser($bug->reporter, 'Bug Telah Selesai', "Bug \"{$bug->title}\" pada project {$bug->project?->name} telah diselesaikan.");
+                }
+            } else {
+                $statusText = match ($bug->status) {
+                    'open' => 'dibuka',
+                    'in_progress' => 'sedang ditangani',
+                    'closed' => 'ditutup',
+                    default => $bug->status,
+                };
+                if ($bug->status !== 'resolved') {
+                    $sender->sendToUser($bug->reporter, 'Status Bug Diperbarui', "Status bug \"{$bug->title}\" diperbarui menjadi {$statusText}.");
+                }
+            }
+        }
         return redirect()->back()->with('success', 'Status bug berhasil diperbarui.');
     }
 
@@ -75,18 +78,10 @@ class BugController extends Controller
         if ($bug->assigned_to !== Auth::id()) {
             abort(403, 'AKSES DITOLAK');
         }
-
         $bug->load(['project', 'reporter', 'attachments']);
-
         if (request()->wantsJson()) {
-            return response()->json([
-                'bug' => $bug
-            ]);
+            return response()->json(['bug' => $bug]);
         }
-
-        return inertia('components/BugDetail', [
-            'bug' => $bug,
-        ]);
+        return inertia('components/BugDetail', ['bug' => $bug]);
     }
-
 }

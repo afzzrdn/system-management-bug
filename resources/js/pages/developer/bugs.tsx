@@ -4,7 +4,9 @@ import AppLayout from '@/layouts/app-layout';
 import axios from 'axios';
 import { Search, ClipboardList, Loader, CheckCircle, Eye } from 'lucide-react';
 import BugDetail from '@/components/BugDetail';
-import type { Bug } from '@/types/bug';
+import type { Bug as TypeBug } from '@/types/bug';
+
+type Bug = TypeBug & { due_at?: string | null; schedule_start_at?: string | null };
 
 type PageProps = {
   bugs?: Bug[];
@@ -27,6 +29,15 @@ const statusStyles = {
   closed: 'bg-gray-600 text-white',
 } as const;
 
+const timeLeft = (due?: string | null) => {
+  if (!due) return '-';
+  const ms = new Date(due).getTime() - Date.now();
+  if (ms <= 0) return 'LEWAT';
+  const h = Math.floor(ms / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  return `${h}j ${m}m`;
+};
+
 export default function DeveloperBugsPage() {
   const { bugs: bugsFromProps, stats: statsFromProps } = usePage<PageProps>().props;
   const bugs = bugsFromProps ?? [];
@@ -37,7 +48,7 @@ export default function DeveloperBugsPage() {
   const [setLoadingDetail] = useState(false);
   const [q, setQ] = useState('');
 
-  const openDetailModal = async (bugId: number) => {
+  const openDetailModal = async (bugId: string | number) => {
     setLoadingDetail(true);
     try {
       const { data } = await axios.get(`/developer/bugs/${bugId}`);
@@ -128,43 +139,15 @@ export default function DeveloperBugsPage() {
           </div>
 
           <div className="max-h-[640px] overflow-auto">
-            <div className="md:hidden divide-y divide-gray-100">
-              {filteredBugs.length ? (
-                filteredBugs.map(bug => (
-                  <div key={bug.id} className="p-4 hover:bg-gray-50/70 transition">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="min-w-0">
-                        <p className="truncate text-base font-semibold text-slate-900">{bug.title}</p>
-                        <p className="mt-0.5 text-xs text-slate-500">Project: {bug.project?.name ?? 'N/A'}</p>
-                        <p className="mt-0.5 text-xs text-slate-500">Prioritas: {bug.priority}</p>
-                      </div>
-                      <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${statusStyles[bug.status as keyof typeof statusStyles]}`}>
-                        {bug.status.replace('_', ' ')}
-                      </span>
-                    </div>
-                    <div className="mt-3">
-                      <button onClick={() => openDetailModal(bug.id)} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-gray-50">
-                        Lihat Detail
-                      </button>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="p-16 text-center">
-                  <h3 className="text-lg font-semibold text-slate-900">Tidak Ada Bug</h3>
-                  <p className="mt-1 text-sm text-slate-500">Ubah filter atau kata kunci pencarian.</p>
-                </div>
-              )}
-            </div>
-
             <div className="hidden md:block">
               <div className="px-5 py-4">
                 <div className="overflow-hidden rounded-xl ring-1 ring-gray-200">
                   <table className="w-full table-fixed text-sm">
                     <colgroup>
-                      <col className="w-[40%]" />
-                      <col className="w-[22%]" />
-                      <col className="w-[14%]" />
+                      <col className="w-[34%]" />
+                      <col className="w-[18%]" />
+                      <col className="w-[12%]" />
+                      <col className="w-[12%]" />
                       <col className="w-[14%]" />
                       <col className="w-[10%]" />
                     </colgroup>
@@ -174,6 +157,7 @@ export default function DeveloperBugsPage() {
                         <th className="px-5 py-3 text-left font-medium">Proyek</th>
                         <th className="px-5 py-3 text-left font-medium">Prioritas</th>
                         <th className="px-5 py-3 text-left font-medium">Status</th>
+                        <th className="px-5 py-3 text-left font-medium">Due</th>
                         <th className="px-5 py-3 text-right font-medium"></th>
                       </tr>
                     </thead>
@@ -194,22 +178,32 @@ export default function DeveloperBugsPage() {
                             <td className="px-5 py-4 align-middle">
                               <span className={`inline-flex items-center rounded-md px-2.5 py-1.5 text-xs font-medium ${statusStyles[bug.status as keyof typeof statusStyles]}`}>{bug.status.replace('_', ' ')}</span>
                             </td>
+                            <td className="px-5 py-4 align-middle whitespace-nowrap">
+                              <div className="text-sm">
+                                <div>{bug.due_at ? new Date(bug.due_at as any).toLocaleString() : '-'}</div>
+                                {bug.due_at && (
+                                  <div className={`text-xs mt-1 ${new Date(bug.due_at as any).getTime() < Date.now() ? 'text-red-600' : 'text-slate-500'}`}>
+                                    {timeLeft(bug.due_at as any)}
+                                  </div>
+                                )}
+                              </div>
+                            </td>
                             <td className="px-5 py-4 text-right">
-                            <div className="inline-flex gap-2">
+                              <div className="inline-flex gap-2">
                                 <button
-                                onClick={() => openDetailModal(bug.id)}
-                                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-gray-50"
+                                  onClick={() => openDetailModal(bug.id as any)}
+                                  className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-gray-50"
                                 >
-                                <Eye className="h-4 w-4" />
-                                Lihat
+                                  <Eye className="h-4 w-4" />
+                                  Lihat
                                 </button>
-                            </div>
+                              </div>
                             </td>
                           </tr>
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={5} className="p-16 text-center">
+                          <td colSpan={6} className="p-16 text-center">
                             <div className="mx-auto max-w-md">
                               <h3 className="text-lg font-semibold text-slate-900">Tidak Ada Bug</h3>
                               <p className="mt-1 text-sm text-slate-500">Ubah filter atau kata kunci pencarian.</p>
@@ -222,11 +216,44 @@ export default function DeveloperBugsPage() {
                 </div>
               </div>
             </div>
+
+            <div className="md:hidden divide-y divide-gray-100">
+              {filteredBugs.length ? (
+                filteredBugs.map(bug => (
+                  <div key={bug.id} className="p-4 hover:bg-gray-50/70 transition">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0">
+                        <p className="truncate text-base font-semibold text-slate-900">{bug.title}</p>
+                        <p className="mt-0.5 text-xs text-slate-500">Project: {bug.project?.name ?? 'N/A'}</p>
+                        <p className="mt-0.5 text-xs text-slate-500">Prioritas: {bug.priority}</p>
+                      </div>
+                      <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${statusStyles[bug.status as keyof typeof statusStyles]}`}>
+                        {bug.status.replace('_', ' ')}
+                      </span>
+                    </div>
+                    <div className="mt-2 text-xs text-slate-600">
+                      Due: {bug.due_at ? new Date(bug.due_at as any).toLocaleString() : '-'} {bug.due_at ? `(${timeLeft(bug.due_at as any)})` : ''}
+                    </div>
+                    <div className="mt-3">
+                      <button onClick={() => openDetailModal(bug.id as any)} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-gray-50">
+                        Lihat Detail
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-16 text-center">
+                  <h3 className="text-lg font-semibold text-slate-900">Tidak Ada Bug</h3>
+                  <p className="mt-1 text-sm text-slate-500">Ubah filter atau kata kunci pencarian.</p>
+                </div>
+              )}
+            </div>
+
           </div>
         </div>
       </div>
 
-      <BugDetail isOpen={isDetailModalOpen} onClose={closeDetailModal} bug={selectedBug} />
+      <BugDetail isOpen={isDetailModalOpen} onClose={closeDetailModal} bug={selectedBug as any} />
     </AppLayout>
   );
 }

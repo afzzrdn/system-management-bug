@@ -7,68 +7,57 @@ use App\Services\NotificationSenderService;
 use App\Models\Bug;
 use App\Models\Project;
 use App\Models\User;
-use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Enums\BugType;
 
 class BugController extends Controller
 {
-    // LIST + FORM BUG
     public function index()
     {
         $user = Auth::user();
+
         $bugs = Bug::with(['project', 'reporter', 'assignee', 'attachments'])
             ->where('reported_by', $user->id)
             ->orderBy('created_at', 'asc')
             ->get();
 
-        $major = 1;
-        $minor = 0;
-        $patch = 0;
+        $major = 1; $minor = 0; $patch = 0;
         foreach ($bugs as $bug) {
             $bug->version = "{$major}.{$minor}.{$patch}";
             $patch++;
-            if ($patch > 9) {
-                $patch = 0;
-                $minor++;
-            }
-            if ($minor > 9) {
-                $minor = 0;
-                $major++;
-            }
+            if ($patch > 9) { $patch = 0; $minor++; }
+            if ($minor > 9) { $minor = 0; $major++; }
         }
-
         $bugs = $bugs->reverse()->values();
 
-        $projects = Project::where('client_id', $user->id)
-            ->select('id', 'name')
-            ->get();
-
-        $users = User::where('role', 'developer')->select('id', 'name')->get();
+        $projects = Project::where('client_id', $user->id)->select('id','name')->get();
+        $users    = User::where('role', 'developer')->select('id','name')->get();
 
         return inertia('client/bug', [
-            'bugs' => $bugs,
+            'bugs'     => $bugs,
             'projects' => $projects,
-            'users' => $users,
-            'auth' => ['user' => $user],
+            'users'    => $users,
+            'auth'     => ['user' => $user],
         ]);
     }
 
     public function store(Request $request, NotificationSenderService $sender)
     {
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'project_id' => 'required|exists:projects,id',
-            'description' => 'required|string',
-            'assigned_to' => 'nullable|exists:users,id',
-            'attachments' => 'nullable|array',
-            'attachments.*' => 'file|mimes:jpg,jpeg,png,gif|max:2048'
+            'title'        => 'required|string|max:255',
+            'project_id'   => 'required|exists:projects,id',
+            'description'  => 'required|string',
+            'assigned_to'  => 'nullable|exists:users,id',
+            'attachments'  => 'nullable|array',
+            'attachments.*'=> 'file|mimes:jpg,jpeg,png,gif,pdf|max:2048',
         ]);
 
         $validated['reported_by'] = Auth::id();
-        $validated['status'] = 'open';
-        $validated['priority'] = 'low';
+        $validated['status']      = 'open';
+        $validated['priority']    = 'low';
         $validated['assigned_to'] = $request->filled('assigned_to') ? $request->assigned_to : null;
+        $validated['type']        = BugType::Lainnya->value;
 
         $bug = Bug::create($validated);
 
@@ -76,8 +65,8 @@ class BugController extends Controller
             foreach ($request->file('attachments') as $file) {
                 $path = $file->store('bug_attachments', 'public');
                 $bug->attachments()->create([
-                    'file_path' => $path,
-                    'file_name' => $file->getClientOriginalName(),
+                    'file_path'   => $path,
+                    'file_name'   => $file->getClientOriginalName(),
                     'uploaded_by' => Auth::id(),
                 ]);
             }
@@ -98,7 +87,6 @@ class BugController extends Controller
         );
 
         $adminUsers = User::where('role', 'admin')->get();
-
         foreach ($adminUsers as $admin) {
             $sender->sendToUser(
                 $admin,
@@ -110,5 +98,4 @@ class BugController extends Controller
         return redirect()->route('client.bugs.index')
             ->with('success', 'Bug berhasil dilaporkan.');
     }
-
 }
