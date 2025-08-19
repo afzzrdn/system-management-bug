@@ -41,11 +41,11 @@ const timeLeft = (due?: string | null) => {
 export default function DeveloperBugsPage() {
   const { bugs: bugsFromProps, stats: statsFromProps } = usePage<PageProps>().props;
   const bugs = bugsFromProps ?? [];
+  const [loadingDetail, setLoadingDetail] = useState(false);
   const stats = statsFromProps ?? { assigned: 0, in_progress: 0, resolved: 0 };
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedBug, setSelectedBug] = useState<Bug | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<StatusFilter>('all');
-  const [setLoadingDetail] = useState(false);
   const [q, setQ] = useState('');
 
   const openDetailModal = async (bugId: string | number) => {
@@ -180,10 +180,10 @@ export default function DeveloperBugsPage() {
                             </td>
                             <td className="px-5 py-4 align-middle whitespace-nowrap">
                               <div className="text-sm">
-                                <div>{bug.due_at ? new Date(bug.due_at as any).toLocaleString() : '-'}</div>
+                                <div>{bug.due_at ? new Date(bug.due_at).toLocaleString() : '-'}</div>
                                 {bug.due_at && (
-                                  <div className={`text-xs mt-1 ${new Date(bug.due_at as any).getTime() < Date.now() ? 'text-red-600' : 'text-slate-500'}`}>
-                                    {timeLeft(bug.due_at as any)}
+                                  <div className={`text-xs mt-1 ${new Date(bug.due_at).getTime() < Date.now() ? 'text-red-600' : 'text-slate-500'}`}>
+                                    {timeLeft(bug.due_at)}
                                   </div>
                                 )}
                               </div>
@@ -191,7 +191,7 @@ export default function DeveloperBugsPage() {
                             <td className="px-5 py-4 text-right">
                               <div className="inline-flex gap-2">
                                 <button
-                                  onClick={() => openDetailModal(bug.id as any)}
+                                  onClick={() => openDetailModal(bug.id)}
                                   className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-gray-50"
                                 >
                                   <Eye className="h-4 w-4" />
@@ -232,10 +232,10 @@ export default function DeveloperBugsPage() {
                       </span>
                     </div>
                     <div className="mt-2 text-xs text-slate-600">
-                      Due: {bug.due_at ? new Date(bug.due_at as any).toLocaleString() : '-'} {bug.due_at ? `(${timeLeft(bug.due_at as any)})` : ''}
+                      Due: {bug.due_at ? new Date(bug.due_at).toLocaleString() : '-'} {bug.due_at ? `(${timeLeft(bug.due_at)})` : ''}
                     </div>
                     <div className="mt-3">
-                      <button onClick={() => openDetailModal(bug.id as any)} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-gray-50">
+                      <button onClick={() => openDetailModal(bug.id)} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-gray-50">
                         Lihat Detail
                       </button>
                     </div>
@@ -253,7 +253,7 @@ export default function DeveloperBugsPage() {
         </div>
       </div>
 
-      <BugDetail isOpen={isDetailModalOpen} onClose={closeDetailModal} bug={selectedBug as any} />
+      <BugDetail isOpen={isDetailModalOpen} onClose={closeDetailModal} bug={selectedBug} />
     </AppLayout>
   );
 }
