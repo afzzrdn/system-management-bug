@@ -36,7 +36,8 @@ class CustomerServiceController extends Controller
 
         return response()->json($messages);
     }
-        // Ambil semua client yang pernah chat
+
+    // Ambil semua client yang pernah chat
     public function fetchClients()
     {
         return User::where('role', 'client')->select('id', 'name')->get();
@@ -46,10 +47,10 @@ class CustomerServiceController extends Controller
     public function fetchMessagesForClient($clientId)
     {
         $admin = Auth::user();
-        $role = $admin->role instanceof \App\Enums\UserRole ? strtolower($admin->role->value) : strtolower((string) $admin->role);
-    if ($role !== 'admin') {
-        return response()->json(['error' => 'Unauthorized'], 403);
-    }
+        $role = $admin->role instanceof \App\Enums\UserRole ? strtolower($admin->role->value) : strtolower((string)$admin->role);
+        if ($role !== 'admin') {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
 
         return ChatMessage::where(function ($query) use ($clientId, $admin) {
             $query->where('sender_id', $clientId)->where('receiver_id', $admin->id);
@@ -93,16 +94,17 @@ class CustomerServiceController extends Controller
         $isOnline = $admin ? Cache::has('user-is-online-' . $admin->id) : false;
         return response()->json(['isOnline' => $isOnline]);
     }
+
     // ADMIN mengirim pesan ke client
     public function adminSendMessage(Request $request, $clientId)
     {
         $request->validate(['message' => 'required|string']);
 
         $admin = Auth::user();
-        $role = $admin->role instanceof \App\Enums\UserRole ? strtolower($admin->role->value) : strtolower((string) $admin->role);
-    if ($role !== 'admin') {
-        return response()->json(['error' => 'Unauthorized'], 403);
-    }
+        $role = $admin->role instanceof \App\Enums\UserRole ? strtolower($admin->role->value) : strtolower((string)$admin->role);
+        if ($role !== 'admin') {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
 
 
         $client = User::findOrFail($clientId);

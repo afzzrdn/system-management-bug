@@ -26,7 +26,7 @@ class DashboardController extends Controller
             ->whereIn('project_id', $projectIds)
             ->latest()
             ->get()
-            ->map(fn ($bug) => [
+            ->map(fn($bug) => [
                 'id' => $bug->id,
                 'title' => $bug->title,
                 'project' => $bug->project->name,
@@ -37,7 +37,7 @@ class DashboardController extends Controller
         $devLogs = Bug::whereIn('project_id', $projectIds)
             ->orderBy('updated_at', 'desc')
             ->get()
-            ->map(fn ($bug) => [
+            ->map(fn($bug) => [
                 'id' => $bug->id,
                 'title' => "Bug '{$bug->title}' diperbarui",
                 'description' => 'Status diubah menjadi ' . ucwords(str_replace('_', ' ', $bug->status)) . ' pada ' . $bug->updated_at->format('d M Y'),

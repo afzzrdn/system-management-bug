@@ -33,8 +33,8 @@ class BugSeeder extends Seeder
                     'id' => Str::uuid(),
                     'title' => $titles[array_rand($titles)] . " ({$project->name})",
                     'description' => 'Deskripsi detail bug untuk project ' . $project->name . '.',
-                    'priority' => ['low', 'medium', 'high', 'critical'][array_rand([0,1,2,3])],
-                    'status' => ['open', 'in_progress', 'resolved', 'closed'][array_rand([0,1,2,3])],
+                    'priority' => ['low', 'medium', 'high', 'critical'][array_rand([0, 1, 2, 3])],
+                    'status' => ['open', 'in_progress', 'resolved', 'closed'][array_rand([0, 1, 2, 3])],
                     'type' => collect(BugType::cases())->random()->value, // pilih BugType acak
                     'project_id' => $project->id,
                     'reported_by' => $reporter->id,

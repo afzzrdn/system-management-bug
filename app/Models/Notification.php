@@ -18,13 +18,14 @@ class Notification extends Model
     {
         return $this->belongsTo(User::class);
     }
+
     protected static function boot()
     {
-    parent::boot();
-    static::creating(function ($model) {
-        if (!$model->id) {
-            $model->id = Str::uuid();
-        }
-    });
+        parent::boot();
+        static::creating(function ($model) {
+            if (!$model->id) {
+                $model->id = Str::uuid();
+            }
+        });
     }
 }

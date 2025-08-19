@@ -1,4 +1,5 @@
 <?php
+
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
@@ -23,11 +24,11 @@ class UserSeeder extends Seeder
             User::firstOrCreate(
                 ['email' => $u['email']],
                 [
-                    'id'       => Str::uuid(),
-                    'name'     => $u['name'],
+                    'id' => Str::uuid(),
+                    'name' => $u['name'],
                     'password' => Hash::make('password'),
-                    'role'     => $u['role'],
-                    'phone'    => $u['phone'],
+                    'role' => $u['role'],
+                    'phone' => $u['phone'],
                 ]
             );
         }

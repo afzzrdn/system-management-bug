@@ -12,9 +12,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-         $this->app->singleton(NotificationSenderService::class, function ($app) {
+        $this->app->singleton(NotificationSenderService::class, function ($app) {
             return new NotificationSenderService($app->make(\App\Services\WablasService::class));
-    });
+        });
     }
 
     /**

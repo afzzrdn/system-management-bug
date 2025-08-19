@@ -69,7 +69,7 @@ class WablasService
 
         // Payload tidak lagi memerlukan secret key
         $payload = [
-            'phone'   => $phoneNumber,
+            'phone' => $phoneNumber,
             'message' => $message,
         ];
 

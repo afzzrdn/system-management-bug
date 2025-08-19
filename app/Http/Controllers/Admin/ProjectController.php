@@ -25,36 +25,36 @@ class ProjectController extends Controller
         // Judul + pesan disesuaikan konteks
         switch ($context) {
             case 'created':
-                $title   = 'Project Baru Dibuat';
+                $title = 'Project Baru Dibuat';
                 $message = "Project: *{$project->name}*\n"
-                         . "Status: aktif\n"
-                         . "Akses: Menu *Project Saya* lalu pilih project Anda.";
+                    . "Status: aktif\n"
+                    . "Akses: Menu *Project Saya* lalu pilih project Anda.";
                 break;
 
             case 'updated':
-                $title   = 'Project Diperbarui';
+                $title = 'Project Diperbarui';
                 $message = "Project: *{$project->name}*\n"
-                         . "Perubahan data project telah disimpan.\n"
-                         . "Akses: Menu *Project Saya* untuk detail terbaru.";
+                    . "Perubahan data project telah disimpan.\n"
+                    . "Akses: Menu *Project Saya* untuk detail terbaru.";
                 break;
 
             case 'moved_from':
-                $title   = 'Project Dipindahkan';
+                $title = 'Project Dipindahkan';
                 $message = "Project: *{$project->name}*\n"
-                         . "Project ini tidak lagi berada di bawah akun Anda.";
+                    . "Project ini tidak lagi berada di bawah akun Anda.";
                 break;
 
             case 'moved_to':
-                $title   = 'Project Dialihkan ke Akun Anda';
+                $title = 'Project Dialihkan ke Akun Anda';
                 $message = "Project: *{$project->name}*\n"
-                         . "Project ini sekarang berada di bawah akun Anda.\n"
-                         . "Akses: Menu *Project Saya* untuk melihat detail.";
+                    . "Project ini sekarang berada di bawah akun Anda.\n"
+                    . "Akses: Menu *Project Saya* untuk melihat detail.";
                 break;
 
             case 'deleted':
-                $title   = 'Project Dihapus';
+                $title = 'Project Dihapus';
                 $message = "Project: *{$project->name}*\n"
-                         . "Project telah dihapus oleh admin.";
+                    . "Project telah dihapus oleh admin.";
                 break;
 
             default:
@@ -70,11 +70,11 @@ class ProjectController extends Controller
     public function index(): Response
     {
         $projects = Project::with('client')->withCount('bugs')->latest()->get();
-        $clients  = User::where('role', UserRole::Client->value)->get();
+        $clients = User::where('role', UserRole::Client->value)->get();
 
         return Inertia::render('admin/project', [
             'projects' => $projects,
-            'clients'  => $clients,
+            'clients' => $clients,
         ]);
     }
 
@@ -82,9 +82,9 @@ class ProjectController extends Controller
     public function store(Request $request, NotificationSenderService $sender)
     {
         $validated = $request->validate([
-            'name'        => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'client_id'   => 'required|exists:users,id,role,' . UserRole::Client->value,
+            'client_id' => 'required|exists:users,id,role,' . UserRole::Client->value,
         ]);
 
         $project = Project::create($validated);
@@ -104,17 +104,25 @@ class ProjectController extends Controller
             'client:id,name',
             'bugs' => function ($query) {
                 $query->with('attachments:id,bug_id,file_path')
-                      ->orderBy('created_at', 'desc');
+                    ->orderBy('created_at', 'desc');
             }
         ]);
 
         // versi bug
-        $major = 1; $minor = 0; $patch = 0;
+        $major = 1;
+        $minor = 0;
+        $patch = 0;
         foreach ($project->bugs as $bug) {
             $bug->version = "{$major}.{$minor}.{$patch}";
             $patch++;
-            if ($patch > 9) { $patch = 0; $minor++; }
-            if ($minor > 9) { $minor = 0; $major++; }
+            if ($patch > 9) {
+                $patch = 0;
+                $minor++;
+            }
+            if ($minor > 9) {
+                $minor = 0;
+                $major++;
+            }
         }
 
         // url attachment
@@ -134,13 +142,13 @@ class ProjectController extends Controller
     public function update(Request $request, Project $project, NotificationSenderService $sender)
     {
         $validated = $request->validate([
-            'name'        => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'client_id'   => 'required|exists:users,id,role,' . UserRole::Client->value,
+            'client_id' => 'required|exists:users,id,role,' . UserRole::Client->value,
         ]);
 
         $clientChanged = $project->client_id !== $validated['client_id'];
-        $oldClient     = $clientChanged ? User::find($project->client_id) : null;
+        $oldClient = $clientChanged ? User::find($project->client_id) : null;
 
         $project->update($validated);
 

@@ -18,10 +18,10 @@ class BugController extends Controller
     public function index(Request $request): Response
     {
         $request->validate([
-            'status'     => 'nullable|string|in:open,in_progress,resolved,closed',
-            'priority'   => 'nullable|string|in:low,medium,high,critical',
+            'status' => 'nullable|string|in:open,in_progress,resolved,closed',
+            'priority' => 'nullable|string|in:low,medium,high,critical',
             'project_id' => 'nullable|uuid|exists:projects,id',
-            'type'       => 'nullable|string|in:Tampilan,Performa,Fitur,Keamanan,Error,Lainnya',
+            'type' => 'nullable|string|in:Tampilan,Performa,Fitur,Keamanan,Error,Lainnya',
         ]);
 
         $bugs = Bug::with(['project', 'reporter', 'assignee', 'attachments'])
@@ -41,25 +41,25 @@ class BugController extends Controller
         });
 
         return Inertia::render('admin/bugs', [
-            'bugs'     => $bugs,
+            'bugs' => $bugs,
             'projects' => Project::all(),
-            'users'    => User::all(),
-            'filters'  => $request->only(['status', 'priority', 'project_id', 'type']),
+            'users' => User::all(),
+            'filters' => $request->only(['status', 'priority', 'project_id', 'type']),
         ]);
     }
 
     public function store(Request $request, NotificationSenderService $sender)
     {
         $data = $request->validate([
-            'title'          => 'required|string|max:255',
-            'description'    => 'nullable|string',
-            'priority'       => 'required|in:low,medium,high,critical',
-            'status'         => 'required|in:open,in_progress,resolved,closed',
-            'type'           => 'required|in:Tampilan,Performa,Fitur,Keamanan,Error,Lainnya',
-            'project_id'     => 'required|exists:projects,id',
-            'assigned_to'    => 'nullable|exists:users,id',
-            'resolved_at'    => 'nullable|date',
-            'attachments.*'  => 'nullable|file|mimes:jpg,jpeg,png,gif,pdf,webp|max:10240',
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'priority' => 'required|in:low,medium,high,critical',
+            'status' => 'required|in:open,in_progress,resolved,closed',
+            'type' => 'required|in:Tampilan,Performa,Fitur,Keamanan,Error,Lainnya',
+            'project_id' => 'required|exists:projects,id',
+            'assigned_to' => 'nullable|exists:users,id',
+            'resolved_at' => 'nullable|date',
+            'attachments.*' => 'nullable|file|mimes:jpg,jpeg,png,gif,pdf,webp|max:10240',
         ]);
 
         $data['reported_by'] = Auth::id();
@@ -70,8 +70,8 @@ class BugController extends Controller
             foreach ($request->file('attachments') as $file) {
                 $path = $file->store('attachments', 'public');
                 $bug->attachments()->create([
-                    'file_path'   => $path,
-                    'file_name'   => $file->getClientOriginalName(),
+                    'file_path' => $path,
+                    'file_name' => $file->getClientOriginalName(),
                     'uploaded_by' => Auth::id(),
                 ]);
             }
@@ -110,15 +110,15 @@ class BugController extends Controller
     public function update(Request $request, Bug $bug)
     {
         $data = $request->validate([
-            'title'          => 'required|string|max:255',
-            'description'    => 'nullable|string',
-            'priority'       => 'required|in:low,medium,high,critical',
-            'status'         => 'required|in:open,in_progress,resolved,closed',
-            'type'           => 'required|in:Tampilan,Performa,Fitur,Keamanan,Error,Lainnya',
-            'project_id'     => 'required|exists:projects,id',
-            'assigned_to'    => 'nullable|exists:users,id',
-            'resolved_at'    => 'nullable|date',
-            'attachments.*'  => 'nullable|file|mimes:jpg,jpeg,png,gif,pdf,webp|max:10240',
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'priority' => 'required|in:low,medium,high,critical',
+            'status' => 'required|in:open,in_progress,resolved,closed',
+            'type' => 'required|in:Tampilan,Performa,Fitur,Keamanan,Error,Lainnya',
+            'project_id' => 'required|exists:projects,id',
+            'assigned_to' => 'nullable|exists:users,id',
+            'resolved_at' => 'nullable|date',
+            'attachments.*' => 'nullable|file|mimes:jpg,jpeg,png,gif,pdf,webp|max:10240',
         ]);
 
         $bug->update($data);
@@ -134,8 +134,8 @@ class BugController extends Controller
             foreach ($request->file('attachments') as $file) {
                 $path = $file->store('attachments', 'public');
                 $bug->attachments()->create([
-                    'file_path'   => $path,
-                    'file_name'   => $file->getClientOriginalName(),
+                    'file_path' => $path,
+                    'file_name' => $file->getClientOriginalName(),
                     'uploaded_by' => Auth::id(),
                 ]);
             }

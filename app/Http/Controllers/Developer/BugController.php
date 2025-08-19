@@ -36,56 +36,57 @@ class BugController extends Controller
     }
 
     public function update(Request $request, Bug $bug, NotificationSenderService $sender)
-{
-    if ($bug->assigned_to !== Auth::id()) {
-        abort(403, 'Akses ditolak');
+    {
+        if ($bug->assigned_to !== Auth::id()) {
+            abort(403, 'Akses ditolak');
+        }
+
+        $request->validate([
+            'status' => 'required|in:open,in_progress,resolved,closed',
+        ]);
+
+        $bug->update([
+            'status' => $request->status,
+        ]);
+
+        $bug->load('reporter');
+
+        if ($bug->reporter) {
+            $statusText = match ($bug->status) {
+                'open' => 'dibuka',
+                'in_progress' => 'sedang ditangani',
+                'resolved' => 'telah diselesaikan',
+                'closed' => 'ditutup',
+                default => $bug->status,
+            };
+
+            $sender->sendToUser(
+                $bug->reporter,
+                'Status Bug Diperbarui',
+                "Status bug \"{$bug->title}\" telah diperbarui menjadi *{$statusText}* oleh developer."
+            );
+        }
+
+        return redirect()->back()->with('success', 'Status bug berhasil diperbarui.');
     }
 
-    $request->validate([
-        'status' => 'required|in:open,in_progress,resolved,closed',
-    ]);
-
-    $bug->update([
-        'status' => $request->status,
-    ]);
-
-    $bug->load('reporter');
-
-     if ($bug->reporter) {
-        $statusText = match ($bug->status) {
-            'open' => 'dibuka',
-            'in_progress' => 'sedang ditangani',
-            'resolved' => 'telah diselesaikan',
-            'closed' => 'ditutup',
-            default => $bug->status,
-        };
-
-        $sender->sendToUser(
-            $bug->reporter,
-            'Status Bug Diperbarui',
-            "Status bug \"{$bug->title}\" telah diperbarui menjadi *{$statusText}* oleh developer."
-        );
-    }
-
-    return redirect()->back()->with('success', 'Status bug berhasil diperbarui.');
-}
     public function show(Bug $bug)
-{
-    if ($bug->assigned_to !== Auth::id()) {
-        abort(403, 'AKSES DITOLAK');
-    }
+    {
+        if ($bug->assigned_to !== Auth::id()) {
+            abort(403, 'AKSES DITOLAK');
+        }
 
-    $bug->load(['project', 'reporter', 'attachments']);
+        $bug->load(['project', 'reporter', 'attachments']);
 
-    if (request()->wantsJson()) {
-        return response()->json([
-            'bug' => $bug
+        if (request()->wantsJson()) {
+            return response()->json([
+                'bug' => $bug
+            ]);
+        }
+
+        return inertia('components/BugDetail', [
+            'bug' => $bug,
         ]);
     }
-
-    return inertia('components/BugDetail', [
-        'bug' => $bug,
-    ]);
-}
 
 }

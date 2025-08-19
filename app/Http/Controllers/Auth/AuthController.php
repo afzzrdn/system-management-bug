@@ -16,30 +16,30 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $validated = $request->validate([
-            'name'      => 'required|string|max:255',
-            'email'     => 'required|string|email|unique:users,email',
-            'phone'     => 'required|string|regex:/^628[0-9]{8,15}$/',
-            'password'  => 'required|string|min:8|confirmed',
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|unique:users,email',
+            'phone' => 'required|string|regex:/^628[0-9]{8,15}$/',
+            'password' => 'required|string|min:8|confirmed',
         ]);
 
         $user = User::create([
-            'name'     => $validated['name'],
-            'email'    => $validated['email'],
-            'phone'    => $validated['phone'],
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'],
             'password' => Hash::make($validated['password']),
-            'role'     => UserRole::Client, // Pastikan enum UserRole ada dengan case 'User'
+            'role' => UserRole::Client, // Pastikan enum UserRole ada dengan case 'User'
         ]);
         Auth::login($user);
 
-    return redirect()->to('/client/dashboard');
+        return redirect()->to('/client/dashboard');
     }
 
     // POST /login
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'email'     => 'required|email',
-            'password'  => 'required|string'
+            'email' => 'required|email',
+            'password' => 'required|string'
         ]);
 
         if (!Auth::attempt($credentials)) {
@@ -49,8 +49,8 @@ class AuthController extends Controller
         }
 
         $role = Auth::user()->role instanceof \App\Enums\UserRole
-        ? Auth::user()->role->value
-        : Auth::user()->role;
+            ? Auth::user()->role->value
+            : Auth::user()->role;
 
         $redirectMap = [
             'admin' => '/admin/dashboard',

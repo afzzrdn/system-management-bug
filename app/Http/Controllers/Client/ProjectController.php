@@ -31,17 +31,25 @@ class ProjectController extends Controller
             'client:id,name',
             'bugs' => function ($q) {
                 $q->with(['attachments:id,bug_id,file_path'])
-                  ->where('reported_by', Auth::id())
-                  ->orderBy('created_at', 'desc');
+                    ->where('reported_by', Auth::id())
+                    ->orderBy('created_at', 'desc');
             },
         ]);
 
-        $major = 1; $minor = 0; $patch = 0;
+        $major = 1;
+        $minor = 0;
+        $patch = 0;
         foreach ($project->bugs as $bug) {
             $bug->version = "{$major}.{$minor}.{$patch}";
             $patch++;
-            if ($patch > 9) { $patch = 0; $minor++; }
-            if ($minor > 9) { $minor = 0; $major++; }
+            if ($patch > 9) {
+                $patch = 0;
+                $minor++;
+            }
+            if ($minor > 9) {
+                $minor = 0;
+                $major++;
+            }
         }
 
         $project->bugs->each(function ($bug) {

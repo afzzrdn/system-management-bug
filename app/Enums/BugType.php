@@ -1,7 +1,9 @@
 <?php
+
 namespace App\Enums;
 
-enum BugType:string {
+enum BugType: string
+{
     case Tampilan = 'Tampilan';
     case Performa = 'Performa';
     case Fitur = 'Fitur';

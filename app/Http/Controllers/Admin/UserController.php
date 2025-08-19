@@ -25,14 +25,14 @@ class UserController extends Controller
                 // Menerapkan filter pencarian jika ada
                 ->when($request->input('search'), function ($query, $search) {
                     $query->where('name', 'like', "%{$search}%")
-                          ->orWhere('email', 'like', "%{$search}%");
+                        ->orWhere('email', 'like', "%{$search}%");
                 })
                 ->when($request->input('role'), function ($query, $role) {
                     $query->where('role', $role);
                 })
                 ->paginate(10)
                 ->withQueryString()
-                ->through(fn ($user) => [
+                ->through(fn($user) => [
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
@@ -58,7 +58,7 @@ class UserController extends Controller
                 'email' => $user->email,
                 'role' => $user->role->value,
             ],
-            'roles' => array_map(fn ($role) => ['value' => $role->value, 'label' => $role->name], UserRole::cases())
+            'roles' => array_map(fn($role) => ['value' => $role->value, 'label' => $role->name], UserRole::cases())
         ]);
     }
 
@@ -83,7 +83,7 @@ class UserController extends Controller
         $user->update($data);
 
         return redirect()->route('users.index')
-                         ->with('success', 'User berhasil diupdate.');
+            ->with('success', 'User berhasil diupdate.');
     }
 
     /**
@@ -94,12 +94,12 @@ class UserController extends Controller
         // Mencegah pengguna menghapus akunnya sendiri
         if (Auth::id() === $user->id) {
             return redirect()->route('users.index')
-                             ->with('error', 'Anda tidak dapat menghapus akun Anda sendiri.');
+                ->with('error', 'Anda tidak dapat menghapus akun Anda sendiri.');
         }
 
         $user->delete();
 
         return redirect()->route('users.index')
-                         ->with('success', 'User berhasil dihapus.');
+            ->with('success', 'User berhasil dihapus.');
     }
 }

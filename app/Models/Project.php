@@ -24,13 +24,14 @@ class Project extends Model
     {
         return $this->hasMany(Bug::class);
     }
+
     protected static function boot()
-{
-    parent::boot();
-    static::creating(function ($model) {
-        if (!$model->id) {
-            $model->id = Str::uuid();
-        }
-    });
-}
+    {
+        parent::boot();
+        static::creating(function ($model) {
+            if (!$model->id) {
+                $model->id = Str::uuid();
+            }
+        });
+    }
 }

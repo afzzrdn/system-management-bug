@@ -24,13 +24,14 @@ class ChatMessage extends Model
     {
         return $this->belongsTo(User::class, 'receiver_id');
     }
+
     protected static function boot()
     {
-    parent::boot();
-    static::creating(function ($model) {
-        if (!$model->id) {
-            $model->id = Str::uuid();
-        }
-    });
+        parent::boot();
+        static::creating(function ($model) {
+            if (!$model->id) {
+                $model->id = Str::uuid();
+            }
+        });
     }
 }

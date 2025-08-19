@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use App\Enums\BugType;
@@ -15,17 +16,32 @@ class Bug extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'title','description','priority','status','type','project_id','reported_by','assigned_to','resolved_at',
+        'title', 'description', 'priority', 'status', 'type', 'project_id', 'reported_by', 'assigned_to', 'resolved_at',
     ];
 
     protected $casts = [
         'type' => BugType::class,
     ];
 
-    public function project(){ return $this->belongsTo(Project::class); }
-    public function reporter(){ return $this->belongsTo(User::class,'reported_by'); }
-    public function assignee(){ return $this->belongsTo(User::class,'assigned_to'); }
-    public function attachments(){ return $this->hasMany(Attachment::class); }
+    public function project()
+    {
+        return $this->belongsTo(Project::class);
+    }
+
+    public function reporter()
+    {
+        return $this->belongsTo(User::class, 'reported_by');
+    }
+
+    public function assignee()
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    public function attachments()
+    {
+        return $this->hasMany(Attachment::class);
+    }
 
     protected static function boot()
     {

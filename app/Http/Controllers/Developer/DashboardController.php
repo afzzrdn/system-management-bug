@@ -22,24 +22,24 @@ class DashboardController extends Controller
             ->latest()
             ->get();
 
-            $bugStatusStats = [
-                'open'        => $bugsFromClients->where('status', 'open')->count(),
-                'in_progress' => $bugsFromClients->where('status', 'in_progress')->count(),
-                'resolved'    => $bugsFromClients->where('status', 'resolved')->count(),
-            ];
+        $bugStatusStats = [
+            'open' => $bugsFromClients->where('status', 'open')->count(),
+            'in_progress' => $bugsFromClients->where('status', 'in_progress')->count(),
+            'resolved' => $bugsFromClients->where('status', 'resolved')->count(),
+        ];
 
         return Inertia::render('developer/dashboard', [
             'bugCountFromClients' => $bugsFromClients->count(),
             'bugDetails' => $bugsFromClients->map(function ($bug) {
                 return [
-                    'id'          => $bug->id,
-                    'title'       => $bug->title,
-                    'priority'    => $bug->priority,
-                    'status'      => $bug->status,
-                    'project'     => $bug->project->name ?? '-',
-                    'reporter'    => $bug->reporter->name ?? '-',
-                    'assignee'    => $bug->assignee->name ?? '-',
-                    'created_at'  => $bug->created_at->format('d M Y'),
+                    'id' => $bug->id,
+                    'title' => $bug->title,
+                    'priority' => $bug->priority,
+                    'status' => $bug->status,
+                    'project' => $bug->project->name ?? '-',
+                    'reporter' => $bug->reporter->name ?? '-',
+                    'assignee' => $bug->assignee->name ?? '-',
+                    'created_at' => $bug->created_at->format('d M Y'),
                 ];
             }),
             'bugStatusStats' => $bugStatusStats,

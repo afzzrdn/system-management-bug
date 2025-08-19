@@ -9,9 +9,9 @@ uses(RefreshDatabase::class);
 /** @test */
 it('can register a user successfully', function () {
     $response = $this->postJson('/register', [
-        'name'                  => 'Afzaal',
-        'email'                 => 'afzaal@example.com',
-        'password'              => 'password123',
+        'name' => 'Afzaal',
+        'email' => 'afzaal@example.com',
+        'password' => 'password123',
         'password_confirmation' => 'password123',
     ]);
 
@@ -27,7 +27,7 @@ it('can register a user successfully', function () {
 /** @test */
 it('fails to register with invalid data', function () {
     $response = $this->postJson('/register', [
-        'name'  => '',
+        'name' => '',
         'email' => 'not-an-email',
     ]);
 
@@ -38,12 +38,12 @@ it('fails to register with invalid data', function () {
 /** @test */
 it('can login with correct credentials', function () {
     $user = User::factory()->create([
-        'email'    => 'login@example.com',
+        'email' => 'login@example.com',
         'password' => Hash::make('secret123'),
     ]);
 
     $response = $this->postJson('/login', [
-        'email'    => 'login@example.com',
+        'email' => 'login@example.com',
         'password' => 'secret123',
     ]);
 
@@ -54,12 +54,12 @@ it('can login with correct credentials', function () {
 /** @test */
 it('fails to login with wrong credentials', function () {
     $user = User::factory()->create([
-        'email'    => 'wrong@example.com',
+        'email' => 'wrong@example.com',
         'password' => Hash::make('correctpass'),
     ]);
 
     $response = $this->postJson('/login', [
-        'email'    => 'wrong@example.com',
+        'email' => 'wrong@example.com',
         'password' => 'wrongpass',
     ]);
 
@@ -88,6 +88,6 @@ it('can retrieve current authenticated user', function () {
     $response->assertStatus(200);
     $response->assertJsonFragment([
         'email' => $user->email,
-        'name'  => $user->name,
+        'name' => $user->name,
     ]);
 });

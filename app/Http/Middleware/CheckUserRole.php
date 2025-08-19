@@ -20,7 +20,7 @@ class CheckUserRole
         // Ambil value dari enum (misalnya: 'admin')
         $userRole = $user->role instanceof UserRole
             ? $user->role->value
-            : (string) $user->role;
+            : (string)$user->role;
 
         $allowedRoles = array_map('strtolower', $roles);
 

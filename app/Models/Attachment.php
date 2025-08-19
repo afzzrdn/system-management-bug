@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Attachment extends Model
 {
     use HasFactory;
-    
+
     public $incrementing = false;
     protected $keyType = 'string';
 
@@ -24,13 +24,14 @@ class Attachment extends Model
     {
         return $this->belongsTo(User::class, 'uploaded_by');
     }
-        protected static function boot()
+
+    protected static function boot()
     {
-    parent::boot();
-    static::creating(function ($model) {
-        if (!$model->id) {
-            $model->id = Str::uuid();
-        }
-    });
+        parent::boot();
+        static::creating(function ($model) {
+            if (!$model->id) {
+                $model->id = Str::uuid();
+            }
+        });
     }
 }

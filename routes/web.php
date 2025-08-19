@@ -15,10 +15,10 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 
-Route::get('/', fn () => Redirect::to('/login'));
+Route::get('/', fn() => Redirect::to('/login'));
 
-Route::get('/login', fn () => Inertia::render('auth/login'))->name('login');
-Route::get('/register', fn () => Inertia::render('auth/register'))->name('register');
+Route::get('/login', fn() => Inertia::render('auth/login'))->name('login');
+Route::get('/register', fn() => Inertia::render('auth/register'))->name('register');
 
 // WEBHOOK WABLAS (untuk menerima pesan masuk dari WhatsApp)
 Route::post('/wablas/webhook', [WablasController::class, 'handleWebhook'])->name('wablas.webhook');
@@ -29,10 +29,10 @@ Route::middleware(['auth'])->group(function () {
         $role = method_exists($user->role, 'value') ? $user->role->value : $user->role;
 
         return match ($role) {
-            'admin'     => redirect('/admin/dashboard'),
+            'admin' => redirect('/admin/dashboard'),
             'developer' => redirect('/developer/dashboard'),
-            'client'    => redirect('/client/dashboard'),
-            default     => abort(403),
+            'client' => redirect('/client/dashboard'),
+            default => abort(403),
         };
     })->name('dashboard');
     Route::get('/notification', [NotificationController::class, 'index'])->name('notification.index');
@@ -42,23 +42,23 @@ Route::middleware(['auth'])->group(function () {
         ]);
     })->name('notifications.unread-count');
 
-Route::middleware(['auth'])->prefix('customer-service')->name('customer-service.')->group(function () {
-    Route::get('/', fn () => Inertia::render('customer-service'))->name('index');
-    Route::get('/messages', [CustomerServiceController::class, 'fetchMessages'])->name('messages');
-    Route::post('/messages', [CustomerServiceController::class, 'sendMessage'])->name('send');
-    Route::get('/admin-status', [CustomerServiceController::class, 'getAdminStatus'])->name('admin-status');
+    Route::middleware(['auth'])->prefix('customer-service')->name('customer-service.')->group(function () {
+        Route::get('/', fn() => Inertia::render('customer-service'))->name('index');
+        Route::get('/messages', [CustomerServiceController::class, 'fetchMessages'])->name('messages');
+        Route::post('/messages', [CustomerServiceController::class, 'sendMessage'])->name('send');
+        Route::get('/admin-status', [CustomerServiceController::class, 'getAdminStatus'])->name('admin-status');
     });
 
     // ADMIN CUSTOMER SERVICE
-Route::middleware(['auth', 'role:admin'])->prefix('admin/customer-service')->name('admin.customer-service.')->group(function () {
-    Route::get('/', fn () => Inertia::render('admin-customer-service'))->name('index');
-    Route::get('/clients', [CustomerServiceController::class, 'fetchClients'])->name('clients');
-    Route::get('/messages/{clientId}', [CustomerServiceController::class, 'fetchMessagesForClient'])->name('messages');
-    Route::post('/messages/{clientId}', [CustomerServiceController::class, 'adminSendMessage'])->name('send');
-});
+    Route::middleware(['auth', 'role:admin'])->prefix('admin/customer-service')->name('admin.customer-service.')->group(function () {
+        Route::get('/', fn() => Inertia::render('admin-customer-service'))->name('index');
+        Route::get('/clients', [CustomerServiceController::class, 'fetchClients'])->name('clients');
+        Route::get('/messages/{clientId}', [CustomerServiceController::class, 'fetchMessagesForClient'])->name('messages');
+        Route::post('/messages/{clientId}', [CustomerServiceController::class, 'adminSendMessage'])->name('send');
+    });
 
-Route::get('/wablas/status', [WablasController::class, 'checkStatus']);
-Route::post('/wablas/send', [WablasController::class, 'sendTestMessage']);
+    Route::get('/wablas/status', [WablasController::class, 'checkStatus']);
+    Route::post('/wablas/send', [WablasController::class, 'sendTestMessage']);
 
 });
 
@@ -72,9 +72,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
     Route::resource('/users', UserController::class);
     Route::resource('bugs', AdminBugController::class)->names([
-        'index'   => 'bugs.index',
-        'store'   => 'bugs.store',
-        'update'  => 'bugs.update',
+        'index' => 'bugs.index',
+        'store' => 'bugs.store',
+        'update' => 'bugs.update',
         'destroy' => 'bugs.destroy',
     ])->parameters([
         'bugs' => 'bug',
@@ -93,9 +93,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
 // DEVELOPER ROUTES
 Route::middleware(['auth', 'role:developer'])->prefix('developer')->group(function () {
     Route::get('/dashboard', [DeveloperDashboardController::class, 'index'])->name('dashboard');
-     Route::get('/bugs', [DeveloperBugController::class, 'index'])->name('developer.bugs.index');
-     Route::get('/bugs/{bug}', [DeveloperBugController::class, 'show'])->name('developer.bugs.show');
-     Route::put('/bugs/{bug}', [DeveloperBugController::class, 'update'])->name('developer.bugs.update');
+    Route::get('/bugs', [DeveloperBugController::class, 'index'])->name('developer.bugs.index');
+    Route::get('/bugs/{bug}', [DeveloperBugController::class, 'show'])->name('developer.bugs.show');
+    Route::put('/bugs/{bug}', [DeveloperBugController::class, 'update'])->name('developer.bugs.update');
 
 });
 
@@ -105,9 +105,9 @@ Route::middleware(['auth', 'role:client'])->prefix('client')->group(function () 
     Route::get('/project', [\App\Http\Controllers\Client\ProjectController::class, 'index'])->name('client.project');
     Route::get('/project/{project}', [\App\Http\Controllers\Client\ProjectController::class, 'show'])->name('client.project.show');
     Route::resource('bugs', ClientBugController::class)->names([
-        'index'   => 'client.bugs.index',
-        'store'   => 'client.bugs.store',
-        'update'  => 'client.bugs.update',
+        'index' => 'client.bugs.index',
+        'store' => 'client.bugs.store',
+        'update' => 'client.bugs.update',
         'destroy' => 'client.bugs.destroy',
     ])->parameters([
         'bugs' => 'bug',
@@ -115,4 +115,4 @@ Route::middleware(['auth', 'role:client'])->prefix('client')->group(function () 
 });
 
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
