@@ -4,6 +4,7 @@ import { ArrowUpRight, Bell, CodeXml, User, Verified } from 'lucide-react';
 import { ReactNode } from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, PieLabelRenderProps } from 'recharts';
 import { User as Auth } from '@/types/index'
+import { useTour } from '@/tour/TourProvider';
 
 interface DashboardProps {
     auth: { user: Auth };
@@ -48,9 +49,10 @@ const StatCard = ({ icon, title, value, iconBgColor, href }: StatCardProps) => (
 );
 
 export default function Dashboard({
-                                      userCount, bugCount, projectCount, bugStatusStats, bugPriorityStats,
-                                  }: DashboardProps) {
-    // DATA: Status
+  userCount, bugCount, projectCount, bugStatusStats, bugPriorityStats,
+}: DashboardProps) {
+    const { start } = useTour();
+
     const statusData = [
         { name: 'Open', value: bugStatusStats?.open ?? 0 },
         { name: 'In Progress', value: bugStatusStats?.in_progress ?? 0 },
@@ -59,35 +61,61 @@ export default function Dashboard({
     const STATUS_COLORS = ['#F59E0B', '#3B82F6', '#22C55E'];
 
     const priorityOrder: PriorityKey[] = ['low', 'medium', 'high', 'critical'];
-    // DATA: Priority
     const priorityData = priorityOrder.map(key => ({
         name: key.charAt(0).toUpperCase() + key.slice(1),
         value: bugPriorityStats?.[key] ?? 0
     }));
     const PRIORITY_COLORS = ['#60A5FA', '#F59E0B', '#F97316', '#EF4444'];
 
-    // Gradient references
     const STATUS_COLORS_GRADIENT = statusData.map((_, i) => `url(#statusGradient${i})`);
     const PRIORITY_COLORS_GRADIENT = priorityData.map((_, i) => `url(#priorityGradient${i})`);
 
-    const renderLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: PieLabelRenderProps) => {
-        if ((percent ?? 0) === 0) return null;
-        const RAD = Math.PI / 180;
-        const r = (innerRadius ?? 0) + ((outerRadius ?? 0) - (innerRadius ?? 0)) * 0.6;
-        const x = (cx ?? 0) + r * Math.cos(-midAngle * RAD);
-        const y = (cy ?? 0) + r * Math.sin(-midAngle * RAD);
+    const renderLabel = ({
+    cx,
+    cy,
+    midAngle,
+    innerRadius,
+    outerRadius,
+    percent,
+    }: PieLabelRenderProps) => {
+    if ((percent ?? 0) === 0) return null;
 
-        return (
-            <text
-                x={x}
-                y={y}
-                textAnchor="middle"
-                dominantBaseline="central"
-                className="text-sm font-semibold text-gray-50 drop-shadow-sm"
-            >
-                {`${((percent ?? 0) * 100).toFixed(0)}%`}
-            </text>
-        );
+    const RAD = Math.PI / 180;
+
+    const cxNum = Number(cx ?? 0);
+    const cyNum = Number(cy ?? 0);
+    const inner = Number(innerRadius ?? 0);
+    const outer = Number(outerRadius ?? 0);
+
+    const r = inner + (outer - inner) * 0.6;
+    const x = cxNum + r * Math.cos(-midAngle * RAD);
+    const y = cyNum + r * Math.sin(-midAngle * RAD);
+
+    return (
+        <text
+        x={x}
+        y={y}
+        textAnchor="middle"
+        dominantBaseline="central"
+        className="text-sm font-semibold text-gray-50 drop-shadow-sm"
+        >
+        {`${((percent ?? 0) * 100).toFixed(0)}%`}
+        </text>
+    );
+    };
+
+    const runTour = () => {
+      start(
+        [
+          { element: '[data-tour="stat-users"]',    popover: { title: 'User Aktif', description: 'Jumlah pengguna terdaftar yang aktif.' } },
+          { element: '[data-tour="stat-bugs"]',     popover: { title: 'Laporan Bug', description: 'Total tiket bug yang terdata.' } },
+          { element: '[data-tour="stat-projects"]', popover: { title: 'Project', description: 'Jumlah project di sistem.' } },
+          { element: '[data-tour="stat-resolved"]', popover: { title: 'Sudah Diselesaikan', description: 'Tiket berstatus resolved.' } },
+          { element: '[data-tour="chart-status"]',  popover: { title: 'Statistik Status', description: 'Distribusi status tiket.' } },
+          { element: '[data-tour="chart-priority"]',popover: { title: 'Statistik Prioritas', description: 'Distribusi prioritas tiket.' } },
+        ],
+        { cursor: true, headerOffsetPx: 64 }
+      );
     };
 
     return (
@@ -97,14 +125,21 @@ export default function Dashboard({
             <div className="p-8">
                 <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
                     <h2 className="text-2xl font-semibold text-gray-400">Admin Dashboard</h2>
+                    {/* ⬅️ NEW */}
+                    <button
+                      onClick={runTour}
+                      className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-gray-50"
+                    >
+                      Tonton Tutorial
+                    </button>
                 </div>
 
                 {/* STAT CARDS */}
                 <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                    <StatCard icon={<User size={18} />} title="User Aktif" value={userCount} iconBgColor="bg-blue-500" href={route('users.index')} />
-                    <StatCard icon={<Bell size={18} />} title="Laporan Bug" value={bugCount} iconBgColor="bg-orange-500" href={route('bugs.index')} />
-                    <StatCard icon={<CodeXml size={18} />} title="Project" value={projectCount} iconBgColor="bg-yellow-500" href={route('projects.index')} />
-                    <StatCard icon={<Verified size={18} />} title="Sudah Diselesaikan" value={bugStatusStats?.resolved ?? 0} iconBgColor="bg-green-500" href={route('bugs.index', { status: 'resolved' })} />
+                    <div data-tour="stat-users"><StatCard icon={<User size={18} />} title="User Aktif" value={userCount} iconBgColor="bg-blue-500" href={route('users.index')} /></div>
+                    <div data-tour="stat-bugs"><StatCard icon={<Bell size={18} />} title="Laporan Bug" value={bugCount} iconBgColor="bg-orange-500" href={route('bugs.index')} /></div>
+                    <div data-tour="stat-projects"><StatCard icon={<CodeXml size={18} />} title="Project" value={projectCount} iconBgColor="bg-yellow-500" href={route('projects.index')} /></div>
+                    <div data-tour="stat-resolved"><StatCard icon={<Verified size={18} />} title="Sudah Diselesaikan" value={bugStatusStats?.resolved ?? 0} iconBgColor="bg-green-500" href={route('bugs.index', { status: 'resolved' })} /></div>
                 </div>
 
                 {/* BUG CHARTS */}
@@ -115,7 +150,7 @@ export default function Dashboard({
 
                     <div className="px-4 md:px-6 py-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
                         {/* STATUS CHART */}
-                        <div className="flex flex-col">
+                        <div className="flex flex-col" data-tour="chart-status">
                             <h4 className="mb-2 text-center text-lg font-medium text-gray-600">Status</h4>
                             <div className="h-[340px]">
                                 <ResponsiveContainer width="100%" height="100%">
@@ -145,17 +180,14 @@ export default function Dashboard({
                                                 <Cell key={i} fill={STATUS_COLORS_GRADIENT[i % STATUS_COLORS_GRADIENT.length]} />
                                             ))}
                                         </Pie>
-                                        <Tooltip
-                                            contentStyle={{ fontSize: '14px', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.15)' }}
-                                            formatter={(v: number, n: string) => [`${v} bug`, n]}
-                                        />
+                                        <Tooltip contentStyle={{ fontSize: '14px', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.15)' }} formatter={(v: number, n: string) => [`${v} bug`, n]} />
                                     </PieChart>
                                 </ResponsiveContainer>
                             </div>
                         </div>
 
                         {/* PRIORITY CHART */}
-                        <div className="flex flex-col">
+                        <div className="flex flex-col" data-tour="chart-priority">
                             <h4 className="mb-2 text-center text-lg font-medium text-gray-600">Prioritas</h4>
                             <div className="h-[340px]">
                                 <ResponsiveContainer width="100%" height="100%">
@@ -185,10 +217,7 @@ export default function Dashboard({
                                                 <Cell key={i} fill={PRIORITY_COLORS_GRADIENT[i % PRIORITY_COLORS_GRADIENT.length]} />
                                             ))}
                                         </Pie>
-                                        <Tooltip
-                                            contentStyle={{ fontSize: '14px', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.15)' }}
-                                            formatter={(v: number, n: string) => [`${v} bug`, n]}
-                                        />
+                                        <Tooltip contentStyle={{ fontSize: '14px', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.15)' }} formatter={(v: number, n: string) => [`${v} bug`, n]} />
                                     </PieChart>
                                 </ResponsiveContainer>
                             </div>

@@ -9,6 +9,8 @@ use App\Http\Controllers\CustomerServiceController;
 use App\Http\Controllers\Developer\DashboardController as DeveloperDashboardController;
 use App\Http\Controllers\Developer\BugController as DeveloperBugController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\Developer\AttachmentController;
+use App\Http\Controllers\Developer\BoardController;
 use App\Http\Controllers\WablasController;
 use App\Http\Controllers\WebhookController;
 use Illuminate\Support\Facades\Route;
@@ -96,7 +98,11 @@ Route::middleware(['auth', 'role:developer'])->prefix('developer')->group(functi
     Route::get('/bugs', [DeveloperBugController::class, 'index'])->name('developer.bugs.index');
     Route::get('/bugs/{bug}', [DeveloperBugController::class, 'show'])->name('developer.bugs.show');
     Route::put('/bugs/{bug}', [DeveloperBugController::class, 'update'])->name('developer.bugs.update');
-
+    Route::get('/board', [BoardController::class, 'index'])->name('developer.board');
+    Route::post('/bugs/{bug}/move', [BoardController::class, 'move'])->name('developer.bugs.move');
+    Route::get('/bugs/{bug}/attachments',  [AttachmentController::class,'index'])->name('developer.attachments.index');
+    Route::post('/bugs/{bug}/attachments', [AttachmentController::class,'store'])->name('developer.attachments.store');
+    Route::delete('/attachments/{attachment}', [AttachmentController::class,'destroy'])->name('developer.attachments.destroy');
 });
 
 // CLIENT ROUTES

@@ -2,9 +2,10 @@ import React, { useState, useMemo } from 'react';
 import { Head, usePage } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import axios from 'axios';
-import { Search, ClipboardList, Loader, CheckCircle, Eye } from 'lucide-react';
+import { Search, ClipboardList, Loader, CheckCircle, Eye, PlayCircle } from 'lucide-react';
 import BugDetail from '@/components/BugDetail';
 import type { Bug as TypeBug } from '@/types/bug';
+import { useTour } from '@/tour/TourProvider';
 
 type Bug = TypeBug & { due_at?: string | null; schedule_start_at?: string | null };
 
@@ -41,12 +42,18 @@ const timeLeft = (due?: string | null) => {
 export default function DeveloperBugsPage() {
   const { bugs: bugsFromProps, stats: statsFromProps } = usePage<PageProps>().props;
   const bugs = bugsFromProps ?? [];
-  const [loadingDetail, setLoadingDetail] = useState(false);
   const stats = statsFromProps ?? { assigned: 0, in_progress: 0, resolved: 0 };
+
+  const [loadingDetail, setLoadingDetail] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedBug, setSelectedBug] = useState<Bug | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<StatusFilter>('all');
+  const [wlOpen, setWlOpen] = useState(false);
+  const [wlBugId, setWlBugId] = useState<number|string|null>(null);
   const [q, setQ] = useState('');
+
+  // ⬇️ tour hook
+  const { start } = useTour();
 
   const openDetailModal = async (bugId: string | number) => {
     setLoadingDetail(true);
@@ -69,7 +76,10 @@ export default function DeveloperBugsPage() {
     if (selectedStatus !== 'all') list = list.filter(b => b.status === selectedStatus);
     if (q.trim()) {
       const s = q.toLowerCase();
-      list = list.filter(b => (b.title || '').toLowerCase().includes(s) || (b.project?.name || '').toLowerCase().includes(s));
+      list = list.filter(b =>
+        (b.title || '').toLowerCase().includes(s) ||
+        (b.project?.name || '').toLowerCase().includes(s)
+      );
     }
     return list;
   }, [bugs, selectedStatus, q]);
@@ -81,15 +91,76 @@ export default function DeveloperBugsPage() {
     { label: 'Resolved', value: 'resolved' },
   ];
 
+  // ⬇️ langkah tour
+  const runTour = () => {
+    start(
+      [
+        {
+          element: '#dev-bugs-kpi',
+          popover: {
+            title: 'Ringkasan Tugasmu',
+            description:
+              'Di sini ada 3 kartu: baru ditugaskan, sedang dikerjakan, dan selesai. Ini cara cepat baca workload kamu.',
+          },
+        },
+        {
+          element: '#dev-bugs-filter',
+          popover: {
+            title: 'Filter Status',
+            description:
+              'Gunakan tombol ini untuk menyaring bug berdasarkan status. Biar fokus cuma yang relevan.',
+          },
+        },
+        {
+          element: '#dev-bugs-search',
+          popover: {
+            title: 'Cari Cepat',
+            description:
+              'Ketik judul atau nama project untuk menemukan bug tertentu dengan cepat.',
+          },
+        },
+        {
+          element: '#dev-bugs-table',
+          popover: {
+            title: 'Daftar Bug',
+            description:
+              'Klik “Lihat” untuk membuka detail bug. Tanggal due dan indikator “LEWAT” membantu memprioritaskan.',
+          },
+        },
+      ],
+      { cursor: true }
+    );
+  };
+
+  const handleLogTime = (bugId: number | string) => {
+    setWlBugId(bugId);
+    setWlOpen(true);
+  };
+
   return (
     <AppLayout>
       <Head title="Bug" />
-      <div className="p-8">
+
+      <div className="p-8 flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-gray-400">Management Bug</h1>
+
+        {/* ⬇️ tombol tutorial */}
+        <button
+          onClick={runTour}
+          className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-gray-50"
+        >
+          <PlayCircle className="h-4 w-4" />
+          Tonton Tutorial
+        </button>
+
       </div>
 
       <div className="p-4 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* KPI row */}
+        <div
+          id="dev-bugs-kpi"
+          className="grid grid-cols-1 md:grid-cols-3 gap-6"
+        >
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-start justify-between">
             <div>
               <h3 className="font-semibold text-gray-500">Baru Ditugaskan</h3>
@@ -121,35 +192,44 @@ export default function DeveloperBugsPage() {
 
         <div className="rounded-2xl border border-gray-100 bg-white shadow-sm">
           <div className="flex flex-wrap justify-between items-center gap-4 border-b border-gray-100 px-5 py-4">
-            <div className="flex items-center gap-2">
+            <div id="dev-bugs-filter" className="flex items-center gap-2">
               {filterButtons.map(btn => (
                 <button
                   key={btn.value}
                   onClick={() => setSelectedStatus(btn.value)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition ${selectedStatus === btn.value ? 'bg-indigo-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition ${
+                    selectedStatus === btn.value
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-gray-100 hover:bg-gray-200'
+                  }`}
                 >
                   {btn.label}
                 </button>
               ))}
             </div>
-            <div className="relative">
+            <div id="dev-bugs-search" className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input value={q} onChange={e => setQ(e.target.value)} placeholder="Cari bug..." className="pl-9 pr-3 py-2 border border-gray-200 rounded-xl text-sm w-64 outline-none focus:border-indigo-300" />
+              <input
+                value={q}
+                onChange={e => setQ(e.target.value)}
+                placeholder="Cari bug..."
+                className="pl-9 pr-3 py-2 border border-gray-200 rounded-xl text-sm w-64 outline-none focus:border-indigo-300"
+              />
             </div>
           </div>
 
           <div className="max-h-[640px] overflow-auto">
             <div className="hidden md:block">
               <div className="px-5 py-4">
-                <div className="overflow-hidden rounded-xl ring-1 ring-gray-200">
+                <div id="dev-bugs-table" className="overflow-hidden rounded-xl ring-1 ring-gray-200">
                   <table className="w-full table-fixed text-sm">
                     <colgroup>
-                      <col className="w-[34%]" />
+                      <col className="w-[24%]" />
                       <col className="w-[18%]" />
-                      <col className="w-[12%]" />
-                      <col className="w-[12%]" />
                       <col className="w-[14%]" />
-                      <col className="w-[10%]" />
+                      <col className="w-[14%]" />
+                      <col className="w-[16%]" />
+                      <col className="w-[16%]" />
                     </colgroup>
                     <thead className="bg-gray-50 text-slate-600">
                       <tr className="text-xs uppercase tracking-wide">
@@ -167,22 +247,46 @@ export default function DeveloperBugsPage() {
                           <tr key={bug.id} className="hover:bg-gray-50">
                             <td className="px-5 py-4 align-middle">
                               <div className="min-w-0">
-                                <p className="truncate text-[15px] font-semibold text-slate-900 leading-6">{bug.title}</p>
-                                <p className="mt-0.5 truncate text-xs text-slate-500">Dilaporkan oleh {bug.reporter?.name ?? '-'}</p>
+                                <p className="truncate text-[15px] font-semibold text-slate-900 leading-6">
+                                  {bug.title}
+                                </p>
+                                <p className="mt-0.5 truncate text-xs text-slate-500">
+                                  Dilaporkan oleh {bug.reporter?.name ?? '-'}
+                                </p>
                               </div>
                             </td>
-                            <td className="px-5 py-4 align-middle whitespace-nowrap text-slate-700">{bug.project?.name ?? 'N/A'}</td>
-                            <td className="px-5 py-4 align-middle">
-                              <span className={`inline-flex items-center rounded-md px-2.5 py-1.5 text-xs font-medium ${priorityStyles[bug.priority as keyof typeof priorityStyles]}`}>{bug.priority}</span>
+                            <td className="px-5 py-4 align-middle whitespace-nowrap text-slate-700">
+                              {bug.project?.name ?? 'N/A'}
                             </td>
                             <td className="px-5 py-4 align-middle">
-                              <span className={`inline-flex items-center rounded-md px-2.5 py-1.5 text-xs font-medium ${statusStyles[bug.status as keyof typeof statusStyles]}`}>{bug.status.replace('_', ' ')}</span>
+                              <span
+                                className={`inline-flex items-center rounded-md px-2.5 py-1.5 text-xs font-medium ${
+                                  priorityStyles[bug.priority as keyof typeof priorityStyles]
+                                }`}
+                              >
+                                {bug.priority}
+                              </span>
+                            </td>
+                            <td className="px-5 py-4 align-middle">
+                              <span
+                                className={`inline-flex items-center rounded-md px-2.5 py-1.5 text-xs font-medium ${
+                                  statusStyles[bug.status as keyof typeof statusStyles]
+                                }`}
+                              >
+                                {bug.status.replace('_', ' ')}
+                              </span>
                             </td>
                             <td className="px-5 py-4 align-middle whitespace-nowrap">
                               <div className="text-sm">
                                 <div>{bug.due_at ? new Date(bug.due_at).toLocaleString() : '-'}</div>
                                 {bug.due_at && (
-                                  <div className={`text-xs mt-1 ${new Date(bug.due_at).getTime() < Date.now() ? 'text-red-600' : 'text-slate-500'}`}>
+                                  <div
+                                    className={`text-xs mt-1 ${
+                                      new Date(bug.due_at).getTime() < Date.now()
+                                        ? 'text-red-600'
+                                        : 'text-slate-500'
+                                    }`}
+                                  >
                                     {timeLeft(bug.due_at)}
                                   </div>
                                 )}
@@ -206,7 +310,9 @@ export default function DeveloperBugsPage() {
                           <td colSpan={6} className="p-16 text-center">
                             <div className="mx-auto max-w-md">
                               <h3 className="text-lg font-semibold text-slate-900">Tidak Ada Bug</h3>
-                              <p className="mt-1 text-sm text-slate-500">Ubah filter atau kata kunci pencarian.</p>
+                              <p className="mt-1 text-sm text-slate-500">
+                                Ubah filter atau kata kunci pencarian.
+                              </p>
                             </div>
                           </td>
                         </tr>
@@ -217,6 +323,7 @@ export default function DeveloperBugsPage() {
               </div>
             </div>
 
+            {/* Mobile list */}
             <div className="md:hidden divide-y divide-gray-100">
               {filteredBugs.length ? (
                 filteredBugs.map(bug => (
@@ -227,15 +334,23 @@ export default function DeveloperBugsPage() {
                         <p className="mt-0.5 text-xs text-slate-500">Project: {bug.project?.name ?? 'N/A'}</p>
                         <p className="mt-0.5 text-xs text-slate-500">Prioritas: {bug.priority}</p>
                       </div>
-                      <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${statusStyles[bug.status as keyof typeof statusStyles]}`}>
+                      <span
+                        className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${
+                          statusStyles[bug.status as keyof typeof statusStyles]
+                        }`}
+                      >
                         {bug.status.replace('_', ' ')}
                       </span>
                     </div>
                     <div className="mt-2 text-xs text-slate-600">
-                      Due: {bug.due_at ? new Date(bug.due_at).toLocaleString() : '-'} {bug.due_at ? `(${timeLeft(bug.due_at)})` : ''}
+                      Due: {bug.due_at ? new Date(bug.due_at).toLocaleString() : '-'}{' '}
+                      {bug.due_at ? `(${timeLeft(bug.due_at)})` : ''}
                     </div>
                     <div className="mt-3">
-                      <button onClick={() => openDetailModal(bug.id)} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-gray-50">
+                      <button
+                        onClick={() => openDetailModal(bug.id)}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-gray-50"
+                      >
                         Lihat Detail
                       </button>
                     </div>
@@ -248,7 +363,6 @@ export default function DeveloperBugsPage() {
                 </div>
               )}
             </div>
-
           </div>
         </div>
       </div>

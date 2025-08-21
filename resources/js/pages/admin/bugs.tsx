@@ -3,6 +3,7 @@ import { useForm, usePage, router, Head } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import BugFormModal from '@/components/BugFormModal';
 import { Listbox, Transition } from '@headlessui/react';
+import { useTour } from '@/tour/TourProvider'; // ⬅️ NEW
 
 type Project = { id: number | string; name: string };
 type User = { id: number | string; name: string; role: 'developer' | 'client' | 'admin' };
@@ -52,6 +53,7 @@ export default function Bugs() {
   const [editingBug, setEditingBug] = useState<Bug | null>(null);
   const [filters, setFilters] = useState({ status: initialFilters.status || '', project_id: initialFilters.project_id || '', priority: initialFilters.priority || '', type: initialFilters.type || '' });
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const { start } = useTour(); // ⬅️ NEW
 
   const initialFormValues: Omit<BugFormData, 'schedule_start_at' | 'delay_reason'> = {
     title: '',
@@ -94,7 +96,7 @@ export default function Bugs() {
       title: bug.title,
       description: bug.description,
       priority: bug.priority,
-      status: bug.status, // Tetap ada di data, tapi tidak di form
+      status: bug.status,
       type: bug.type,
       attachments: [],
       project_id: String(bug.project_id),
@@ -126,27 +128,60 @@ export default function Bugs() {
 
   const isImageUrl = (url: string) => /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(url);
 
+  // ⬅️ NEW: tutorial steps
+  const runTour = () => {
+    start(
+      [
+        { element: '[data-tour="filters-status"]',   popover: { title: 'Filter Status', description: 'Klik untuk membatasi daftar berdasarkan status tiket.' } },
+        { element: '[data-tour="filters-priority"]', popover: { title: 'Filter Prioritas', description: 'Pilih prioritas tiket yang ingin difokuskan.' } },
+        { element: '[data-tour="filters-project"]',  popover: { title: 'Filter Proyek', description: 'Tampilkan tiket untuk proyek tertentu.' } },
+        { element: '[data-tour="filters-type"]',     popover: { title: 'Jenis Bug', description: 'Saring berdasarkan kategori bug.' } },
+        { element: '[data-tour="add-bug"]',          popover: { title: 'Tambah Bug', description: 'Buat tiket baru lengkap dengan lampiran dan prioritas.' } },
+        { element: '[data-tour="bug-grid"]',         popover: { title: 'Kartu Bug', description: 'Ringkasan tiap tiket. Arahkan kursor untuk aksi cepat.' } },
+        { element: '[data-tour="card-actions"]',     popover: { title: 'Aksi', description: 'Edit atau hapus tiket dari sini.' } },
+      ],
+      { cursor: true, headerOffsetPx: 64 }
+    );
+  };
+
   return (
     <AppLayout>
       <Head><title>Management Bug</title></Head>
       <div className="p-4 sm:p-6 md:p-8 space-y-6">
         <div className="flex flex-wrap justify-between items-center gap-4">
           <h1 className="text-2xl font-bold text-gray-400">Management Bug</h1>
-          <button onClick={openAddModal} className="inline-flex items-center justify-center gap-x-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" /></svg>
-            <span>Tambah Bug</span>
-          </button>
+
+          {/* ⬅️ NEW: tombol tutorial + add bug */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={runTour}
+              className="inline-flex items-center justify-center px-3 py-2 rounded-md border border-gray-200 bg-white text-sm font-medium text-slate-700 hover:bg-gray-50"
+            >
+              Tonton Tutorial
+            </button>
+
+            <button
+              data-tour="add-bug"
+              onClick={openAddModal}
+              className="inline-flex items-center justify-center gap-x-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" /></svg>
+              <span>Tambah Bug</span>
+            </button>
+          </div>
         </div>
+
         <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-6 items-end">
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2" data-tour="filters-status">
               <label className="text-sm font-medium text-slate-700 block mb-2">Filter by Status</label>
               <div className="flex flex-wrap gap-2">
                 <button type="button" onClick={() => setFilters(prev => ({ ...prev, status: '' }))} className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${filters.status === '' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}>Semua</button>
                 {Object.entries(statusInfo).map(([key, { text }]) => (<button key={key} type="button" onClick={() => setFilters(prev => ({ ...prev, status: key }))} className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${filters.status === key ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}>{text}</button>))}
               </div>
             </div>
-            <div>
+
+            <div data-tour="filters-priority">
               <Listbox value={filters.priority} onChange={(value) => setFilters(prev => ({ ...prev, priority: value as string }))}>
                 <div className="relative">
                   <Listbox.Label className="text-sm font-medium text-slate-700 block mb-2">Prioritas</Listbox.Label>
@@ -160,7 +195,8 @@ export default function Bugs() {
                 </div>
               </Listbox>
             </div>
-            <div>
+
+            <div data-tour="filters-project">
               <Listbox value={filters.project_id} onChange={(value) => setFilters(prev => ({ ...prev, project_id: value as string }))}>
                 <div className="relative">
                   <Listbox.Label className="text-sm font-medium text-slate-700 block mb-2">Proyek</Listbox.Label>
@@ -174,7 +210,8 @@ export default function Bugs() {
                 </div>
               </Listbox>
             </div>
-            <div className="lg:col-span-2">
+
+            <div className="lg:col-span-2" data-tour="filters-type">
               <Listbox value={filters.type} onChange={(value) => setFilters(prev => ({ ...prev, type: value as string }))}>
                 <div className="relative">
                   <Listbox.Label className="text-sm font-medium text-slate-700 block mb-2">Jenis Bug</Listbox.Label>
@@ -189,6 +226,7 @@ export default function Bugs() {
               </Listbox>
             </div>
           </div>
+
           {(filters.status || filters.project_id || filters.priority || filters.type) && (
             <div className="mt-4 pt-4 border-t border-slate-200 flex justify-end">
               <button onClick={resetFilters} className="inline-flex items-center gap-x-2 px-3 py-2 text-sm font-semibold text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors">
@@ -198,9 +236,10 @@ export default function Bugs() {
             </div>
           )}
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6" data-tour="bug-grid">
           {bugs.length > 0 ? (
-            bugs.map((bug) => (
+            bugs.map((bug, idx) => (
               <div key={bug.id} className="bg-white border border-slate-200 rounded-xl flex flex-col transition-all duration-300 hover:shadow-lg hover:border-indigo-400/50 hover:-translate-y-1">
                 <div className="p-6 flex-grow">
                   <div className="flex justify-between items-start gap-4">
@@ -229,7 +268,7 @@ export default function Bugs() {
                     )}
                   </div>
                 </div>
-                <div className="bg-slate-50/75 border-t border-slate-200 px-6 py-3 flex justify-end items-center space-x-4 rounded-b-xl">
+                <div className="bg-slate-50/75 border-t border-slate-200 px-6 py-3 flex justify-end items-center space-x-4 rounded-b-xl" data-tour={idx === 0 ? 'card-actions' : undefined}>
                   <button onClick={() => openEditModal(bug)} className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">Edit</button>
                   <button onClick={() => handleDelete(bug.id)} className="text-sm font-semibold text-red-600 hover:text-red-800 transition-colors">Hapus</button>
                 </div>
@@ -242,8 +281,10 @@ export default function Bugs() {
             </div>
           )}
         </div>
+
         <BugFormModal isOpen={isModalOpen} onClose={closeModal} onSubmit={handleSubmit} isEditing={isEditing} form={form as any} projects={projects} users={users} />
       </div>
+
       {previewImage && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="bg-white p-4 rounded-lg max-w-3xl max-h-[90vh] overflow-auto">

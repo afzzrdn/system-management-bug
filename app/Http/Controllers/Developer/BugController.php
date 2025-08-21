@@ -84,4 +84,31 @@ class BugController extends Controller
         }
         return inertia('components/BugDetail', ['bug' => $bug]);
     }
+    public function board()
+{
+    $devId = Auth::id();
+    $bugs = \App\Models\Bug::with(['project:id,name'])
+        ->where('assigned_to', $devId)
+        ->orderBy('priority','desc')
+        ->get(['id','title','status','priority','project_id']);
+
+    return \Inertia\Inertia::render('developer/board', [
+        'bugs' => $bugs,
+    ]);
+}
+
+public function move(\App\Models\Bug $bug)
+{
+    abort_unless($bug->assigned_to === Auth::id(), 403);
+    request()->validate([
+        'status' => ['required','in:open,in_progress,resolved']
+    ]);
+    $bug->status = request('status');
+    // opsional: saat geser ke in_progress, isi assigned_to kalau kosong
+    if (!$bug->assigned_to) $bug->assigned_to = Auth::id();
+    if ($bug->status === 'resolved' && !$bug->resolved_at) $bug->resolved_at = now();
+    $bug->save();
+    return response()->json(['ok'=>true]);
+}
+
 }
