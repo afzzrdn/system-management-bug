@@ -248,7 +248,6 @@ export default function DeveloperBugsPage() {
                 </div>
               )}
             </div>
-
           </div>
         </div>
       </div>
