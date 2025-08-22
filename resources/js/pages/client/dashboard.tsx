@@ -1,11 +1,12 @@
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link } from '@inertiajs/react';
 import { ArrowUpRight, Bug, FolderKanban, Eye } from 'lucide-react';
-import { ReactNode, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { Bug as BugType } from '@/types/bug';
 import { Button } from '@/components/ui/button';
 import BugDetail from '@/components/BugDetail';
 import { User } from '@/types/index';
+import { useTour } from '@/tour/TourProvider'; // ⬅️ NEW
 
 interface RecentBug {
     id: number;
@@ -53,9 +54,31 @@ const StatCard = ({ icon, title, value, iconBgColor, href, loading }: StatCardPr
     </Link>
 );
 
-export default function Dashboard({ stats, recentBugs = [], devLogs = [] }: DashboardProps) {
+export default function Dashboard({ auth, stats, recentBugs = [], devLogs = [] }: DashboardProps) {
     const [isDetailOpen, setIsDetailOpen] = useState(false);
     const [selectedBug, setSelectedBug] = useState<BugType | null>(null);
+
+    const { start } = useTour(); // ⬅️ NEW
+
+    const runTour = () => {
+        const key = `tour:client-dashboard:${auth?.user?.id ?? 'anon'}`;
+        start(
+            [
+                { element: '[data-tour="stat-open"]',     popover: { title: 'Bug Dilaporkan', description: 'Jumlah tiket yang masih Open.' } },
+                { element: '[data-tour="stat-resolved"]', popover: { title: 'Bug Diperbaiki', description: 'Tiket berstatus Resolved pada periode berjalan.' } },
+                { element: '[data-tour="stat-projects"]', popover: { title: 'Jumlah Project', description: 'Total project yang kamu pantau.' } },
+                { element: '[data-tour="recent-list"]',   popover: { title: 'Recent Bug Reports', description: 'Daftar tiket terbaru. Klik ikon “Lihat” untuk detail & diskusi.' } },
+                { element: '[data-tour="view-all"]',      popover: { title: 'Semua Bug', description: 'Buka halaman manajemen bug lengkap.' } },
+                { element: '[data-tour="dev-log"]',       popover: { title: 'Development Log', description: 'Catatan aktivitas pengembangan terbaru.' } },
+            ],
+            { cursor: true, headerOffsetPx: 64, onDone: () => localStorage.setItem(key, 'done') }
+        );
+    };
+
+    useEffect(() => {
+        const key = `tour:client-dashboard:${auth?.user?.id ?? 'anon'}`;
+        if (!localStorage.getItem(key)) runTour();
+    }, []);
 
     const handleViewBug = (bug: BugType) => {
         setSelectedBug(bug);
@@ -98,19 +121,38 @@ export default function Dashboard({ stats, recentBugs = [], devLogs = [] }: Dash
                     <div>
                         <h2 className="text-2xl font-semibold text-gray-400">Client Dashboard</h2>
                     </div>
+                    {/* ⬅️ NEW: tombol replay tutorial */}
+                    <button
+                        onClick={runTour}
+                        className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-gray-50"
+                    >
+                        Tonton Tutorial
+                    </button>
                 </header>
 
                 <div className="mb-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                    <StatCard title="Bug Dilaporkan" value={stats?.bugReported || 0} icon={<Bug size={22} />} iconBgColor="bg-red-500" href={route('client.bugs.index')} loading={!stats} />
-                    <StatCard title="Bug Diperbaiki" value={stats?.bugFixed || 0} icon={<Bug size={22} />} iconBgColor="bg-green-500" href={route('client.bugs.index', { status: 'resolved' })} loading={!stats} />
-                    <StatCard title="Jumlah Project" value={stats?.activeProjects || 0} icon={<FolderKanban size={22} />} iconBgColor="bg-blue-500" href={route('client.project')} loading={!stats} />
+                    <div data-tour="stat-open">
+                        <StatCard title="Bug Dilaporkan" value={stats?.bugReported || 0} icon={<Bug size={22} />} iconBgColor="bg-red-500" href={route('client.bugs.index')} loading={!stats} />
+                    </div>
+                    <div data-tour="stat-resolved">
+                        <StatCard title="Bug Diperbaiki" value={stats?.bugFixed || 0} icon={<Bug size={22} />} iconBgColor="bg-green-500" href={route('client.bugs.index', { status: 'resolved' })} loading={!stats} />
+                    </div>
+                    <div data-tour="stat-projects">
+                        <StatCard title="Jumlah Project" value={stats?.activeProjects || 0} icon={<FolderKanban size={22} />} iconBgColor="bg-blue-500" href={route('client.project')} loading={!stats} />
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 gap-7 lg:grid-cols-2">
-                    <div className="rounded-2xl border border-gray-100 bg-white p-0 shadow-sm">
+                    <div className="rounded-2xl border border-gray-100 bg-white p-0 shadow-sm" data-tour="recent-list">
                         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white/80 p-6 backdrop-blur">
                             <h4 className="text-xl font-semibold text-gray-900">Recent Bug Reports</h4>
-                            <Link href={route('client.bugs.index')} className="rounded-lg bg-gray-50 px-3 py-2 text-sm font-medium text-gray-700 ring-1 ring-inset ring-gray-200 transition hover:bg-gray-100">View All</Link>
+                            <Link
+                                data-tour="view-all"
+                                href={route('client.bugs.index')}
+                                className="rounded-lg bg-gray-50 px-3 py-2 text-sm font-medium text-gray-700 ring-1 ring-inset ring-gray-200 transition hover:bg-gray-100"
+                            >
+                                View All
+                            </Link>
                         </div>
                         {recentBugs.length === 0 ? (
                             <div className="p-10 text-center text-gray-500">
@@ -148,7 +190,7 @@ export default function Dashboard({ stats, recentBugs = [], devLogs = [] }: Dash
                         )}
                     </div>
 
-                    <div className="rounded-2xl border border-gray-100 bg-white p-0 shadow-sm">
+                    <div className="rounded-2xl border border-gray-100 bg-white p-0 shadow-sm" data-tour="dev-log">
                         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white/80 p-6 backdrop-blur">
                             <h4 className="text-xl font-semibold text-gray-900">Development Log</h4>
                         </div>

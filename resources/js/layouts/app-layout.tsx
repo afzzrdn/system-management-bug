@@ -21,6 +21,7 @@ const navItems = [
     { title: "Bug", href: "/developer/bugs", icon: Bug, roles: ["developer"] },
     { title: "Project", href: "/client/project", icon: Folder, roles: ["client"] },
     { title: "Bug", href: "/client/bugs", icon: Bug, roles: ["client"] },
+    { title: "Board", href: "/developer/board", icon: Bug, roles: ["developer"] },
 ];
 
 export default function AppLayout({ children }: AppLayoutProps) {
@@ -32,7 +33,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
     const handleLogout = () => {
         router.post("/logout");
     };
-    
+
     const toggleSidebar = () => {
         setIsSidebarCollapsed(!isSidebarCollapsed);
     };
@@ -49,7 +50,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
     return (
         <div className="flex bg-gray-100 min-h-screen">
             <aside className={`bg-white border-r fixed h-screen border-gray-200 flex flex-col transition-all duration-300 ${isSidebarCollapsed ? "w-20" : "w-64"}`}>
-                
+
                 <div className="p-4 border-b border-gray-200 flex items-center gap-4">
                     <div className="bg-blue-600 p-2 rounded-lg text-white">
                        <ShieldCheck size={24}/>
@@ -84,9 +85,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
                 <div className="p-4 border-t border-gray-200">
                     <button onClick={toggleSidebar} className="w-full flex items-center justify-center p-2 rounded-md hover:bg-gray-100 text-gray-600">
-                        <ChevronsLeft 
+                        <ChevronsLeft
                             size={18}
-                            className={`transition-transform duration-300 ${isSidebarCollapsed ? "rotate-180" : ""}`} 
+                            className={`transition-transform duration-300 ${isSidebarCollapsed ? "rotate-180" : ""}`}
                         />
                     </button>
                 </div>

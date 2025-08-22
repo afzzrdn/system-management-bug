@@ -6,6 +6,7 @@ import ProjectDetailModal from '@/components/ProjectDetail';
 import ProjectTable from '@/components/ProjectTable';
 import ProjectFormModal from '@/components/FormProject';
 import axios from 'axios';
+import { useTour } from '@/tour/TourProvider'; // ⬅️ NEW
 
 type Project = {
     id: number;
@@ -16,33 +17,24 @@ type Project = {
     bugs?: any[];
 };
 
-type Client = {
-    id: number;
-    name: string;
-};
+type Client = { id: number; name: string; };
 
 interface CustomPageProps {
     projects: Project[];
     clients: Client[];
-    flash?: {
-        success?: string;
-    };
+    flash?: { success?: string; };
     errors?: Record<string, string>;
     [key: string]: unknown;
 }
 
 export default function ProjectIndex() {
-    const {
-        projects = [],
-        clients = [],
-        flash = {},
-        errors = {},
-    } = usePage<CustomPageProps>().props;
+    const { projects = [], clients = [], flash = {}, errors = {} } = usePage<CustomPageProps>().props;
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingProjectId, setEditingProjectId] = useState<number | null>(null);
     const [selectedProject, setSelectedProject] = useState<Project | null>(null);
     const [isLoadingDetail, setIsLoadingDetail] = useState(false);
+    const { start } = useTour(); // ⬅️ NEW
 
     const openDetailModal = async (project: Project) => {
         setIsLoadingDetail(true);
@@ -50,6 +42,11 @@ export default function ProjectIndex() {
         try {
             const response = await axios.get(route('projects.show', project.id));
             setSelectedProject(response.data.project);
+
+            // highlight modal saat terbuka
+            setTimeout(() => {
+              start([{ element: '[data-tour="project-detail-modal"]', popover: { title: 'Detail Project', description: 'Info singkat project & daftar bug terkait.' } }], { cursor: true, headerOffsetPx: 64 });
+            }, 60);
         } catch (error) {
             console.error("Gagal memuat detail project:", error);
             alert('Gagal memuat detail project. Silakan coba lagi.');
@@ -58,65 +55,41 @@ export default function ProjectIndex() {
         }
     };
 
-    const closeDetailModal = () => {
-        setSelectedProject(null);
-    };
+    const closeDetailModal = () => { setSelectedProject(null); };
 
-    const {
-        data,
-        setData,
-        post,
-        put,
-        reset,
-        delete: destroy,
-        processing,
-    } = useForm({
-        name: '',
-        description: '',
-        client_id: '',
-    });
+    const { data, setData, post, put, reset, delete: destroy, processing } = useForm({ name: '', description: '', client_id: '' });
 
-    const openModalForCreate = () => {
-        reset();
-        setEditingProjectId(null);
-        setIsModalOpen(true);
-    };
+    const openModalForCreate = () => { reset(); setEditingProjectId(null); setIsModalOpen(true); };
 
     const openModalForEdit = (project: Project) => {
-        setData({
-            name: project.name,
-            description: project.description ?? '',
-            client_id: project.client_id.toString(),
-        });
+        setData({ name: project.name, description: project.description ?? '', client_id: project.client_id.toString() });
         setEditingProjectId(project.id);
         setIsModalOpen(true);
     };
 
-    const closeModal = () => {
-        setIsModalOpen(false);
-        setTimeout(() => reset(), 300);
-    };
+    const closeModal = () => { setIsModalOpen(false); setTimeout(() => reset(), 300); };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const options = {
-            onSuccess: () => closeModal(),
-            preserveScroll: true,
-        };
-
-        if (editingProjectId) {
-            put(route('projects.update', editingProjectId), options);
-        } else {
-            post(route('projects.store'), options);
-        }
+        const options = { onSuccess: () => closeModal(), preserveScroll: true };
+        if (editingProjectId) put(route('projects.update', editingProjectId), options);
+        else post(route('projects.store'), options);
     };
 
     const handleDelete = (project: Project) => {
         if (confirm('Apakah Anda yakin ingin menghapus project ini?')) {
-            destroy(route('projects.destroy', project.id), {
-                preserveScroll: true,
-            });
+            destroy(route('projects.destroy', project.id), { preserveScroll: true });
         }
+    };
+
+    const runTour = () => {
+      start(
+        [
+          { element: '[data-tour="add-project"]',  popover: { title: 'Tambah Project', description: 'Buat project baru untuk mulai melacak bug.' } },
+          { element: '[data-tour="projects-table"]', popover: { title: 'Daftar Project', description: 'Klik baris untuk melihat detail project.' } },
+        ],
+        { cursor: true, headerOffsetPx: 64 }
+      );
     };
 
     return (
@@ -126,13 +99,22 @@ export default function ProjectIndex() {
             <div className="p-8 max-w-full mx-auto">
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-bold text-gray-400">Management Project</h2>
-                    <button
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={runTour}
+                        className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-gray-50"
+                      >
+                        Tonton Tutorial
+                      </button>
+                      <button
+                        data-tour="add-project"
                         onClick={openModalForCreate}
                         className="inline-flex items-center gap-2 justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
+                      >
                         <Plus size={20} />
                         Tambah Project
-                    </button>
+                      </button>
+                    </div>
                 </div>
 
                 {flash?.success && (
@@ -142,13 +124,15 @@ export default function ProjectIndex() {
                     </div>
                 )}
 
-                <ProjectTable
-                    projects={projects}
-                    context="admin"
-                    onEdit={openModalForEdit}
-                    onDelete={handleDelete}
-                    onDetail={openDetailModal}
-                />
+                <div data-tour="projects-table">
+                  <ProjectTable
+                      projects={projects}
+                      context="admin"
+                      onEdit={openModalForEdit}
+                      onDelete={handleDelete}
+                      onDetail={openDetailModal}
+                  />
+                </div>
             </div>
 
             <ProjectFormModal
@@ -164,10 +148,9 @@ export default function ProjectIndex() {
             />
 
             {selectedProject && (
-                <ProjectDetailModal
-                    project={selectedProject}
-                    onClose={closeDetailModal}
-                />
+                <div data-tour="project-detail-modal">
+                  <ProjectDetailModal project={selectedProject} onClose={closeDetailModal} />
+                </div>
             )}
         </AppLayout>
     );

@@ -1,10 +1,11 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useForm, usePage, router, Head } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import BugFormModal from '@/components/BugReportModal';
 import BugDetail from '@/components/BugDetail';
-import { Eye, Plus, Trash2, Filter, X, Search, ChevronDown, Pencil, ArrowUpRight } from 'lucide-react';
+import { Eye, Plus, Trash2, Filter, X, Search, ChevronDown } from 'lucide-react';
 import type { Bug } from '@/types/bug';
+import { useTour } from '@/tour/TourProvider'; // ⬅️ NEW
 
 type Project = { id: number; name: string; };
 type User = { id: number; name: string; role: 'developer' | 'client' | 'admin'; };
@@ -33,6 +34,7 @@ export default function Bugs() {
   const [projectId, setProjectId] = useState<string>('');
   const [assigneeId, setAssigneeId] = useState<string>('');
   const [search, setSearch] = useState<string>('');
+  const { start } = useTour(); // ⬅️ NEW
 
   const initialFormValues: BugFormData = { title: '', description: '', priority: 'low', status: 'open', attachments: [], project_id: '', assigned_to: '' };
   const { data, setData, post, processing, errors, reset, transform } = useForm(initialFormValues);
@@ -78,6 +80,19 @@ export default function Bugs() {
 
   const resetFilter = () => { setStatus('all'); setProjectId(''); setAssigneeId(''); setSearch(''); };
 
+  const runTour = () => {
+    start(
+      [
+        { element: '[data-tour="add-bug"]',       popover: { title: 'Tambah Laporan Bug', description: 'Buat tiket baru. Bisa unggah gambar/video & pilih prioritas.' } },
+        { element: '[data-tour="filter"]',        popover: { title: 'Filter', description: 'Saring berdasarkan status, project, assignee, atau cari judul.' } },
+        { element: '[data-tour="filter-panel"]',  popover: { title: 'Cari & Status', description: 'Ketik kata kunci atau ubah status untuk mempersempit daftar.' } },
+        { element: '[data-tour="bug-table"]',     popover: { title: 'Daftar Bug', description: 'Daftar tiket sesuai filter kamu.' } },
+        { element: '[data-tour="row-view"]',      popover: { title: 'Detail Bug', description: 'Klik “Lihat” untuk membuka detail & diskusi.' } },
+      ],
+      { cursor: true, headerOffsetPx: 64 }
+    );
+  };
+
   return (
     <AppLayout>
       <Head><title>Manajemen Bug</title></Head>
@@ -89,19 +104,24 @@ export default function Bugs() {
           </div>
           <div className="relative">
             <div className="flex items-center gap-2">
-              <button onClick={() => setFilterOpen(v => !v)} className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-gray-50">
+              {/* ⬅️ NEW: tombol tutorial */}
+              <button onClick={runTour} className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-gray-50">
+                Tonton Tutorial
+              </button>
+
+              <button data-tour="filter" onClick={() => setFilterOpen(v => !v)} className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-gray-50">
                 <Filter className="h-4 w-4" />
                 Filter
                 <ChevronDown className={`h-4 w-4 transition ${filterOpen ? 'rotate-180' : ''}`} />
               </button>
-              <button onClick={openAddModal} className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+              <button data-tour="add-bug" onClick={openAddModal} className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                 <Plus className="h-4 w-4" />
                 Tambah Laporan Bug
               </button>
             </div>
 
             {filterOpen && (
-              <div className="absolute right-0 z-20 mt-2 w-[320px] rounded-2xl border border-gray-200 bg-white p-4 shadow-xl">
+              <div data-tour="filter-panel" className="absolute right-0 z-20 mt-2 w-[320px] rounded-2xl border border-gray-200 bg-white p-4 shadow-xl">
                 <div className="mb-3">
                   <label className="mb-1 block text-xs font-semibold text-slate-600">Cari</label>
                   <div className="relative">
@@ -136,7 +156,7 @@ export default function Bugs() {
                   </select>
                 </div>
                 <div className="flex items-center justify-between">
-                  <button onClick={resetFilter} className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-gray-50">
+                  <button onClick={() => { resetFilter(); }} className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-gray-50">
                     <X className="h-4 w-4" />
                     Reset
                   </button>
@@ -149,7 +169,7 @@ export default function Bugs() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-gray-100 bg-white shadow-sm">
+        <div className="rounded-2xl border border-gray-100 bg-white shadow-sm" data-tour="bug-table">
           <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-gray-100 bg-white/80 px-5 py-4 backdrop-blur">
             <div className="flex items-center gap-3">
               <span className="text-sm font-medium text-slate-800">Daftar Bug</span>
@@ -207,7 +227,7 @@ export default function Bugs() {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                        {filteredBugs.map((bug) => (
+                        {filteredBugs.map((bug, idx) => (
                         <tr key={bug.id} className="hover:bg-gray-50">
                             <td className="px-5 py-4">{bug.title}</td>
                             <td className="px-5 py-4">{bug.project?.name ?? 'N/A'}</td>
@@ -226,6 +246,7 @@ export default function Bugs() {
                             <td className="px-5 py-4 text-right">
                             <div className="inline-flex gap-2">
                                 <button
+                                data-tour={idx === 0 ? 'row-view' : undefined} // ⬅️ target step agar pasti ada
                                 onClick={() => handleViewDetail(bug)}
                                 className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-gray-50"
                                 >
