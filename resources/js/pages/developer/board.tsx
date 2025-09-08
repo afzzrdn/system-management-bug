@@ -129,7 +129,7 @@ export default function DevBoard() {
           },
         },
       ],
-      { cursor: true }
+      { cursor: false }
     );
   };
 
@@ -141,13 +141,12 @@ export default function DevBoard() {
           <h1 className="text-2xl font-semibold text-gray-400">Kanban Board</h1>
 
           <div className="flex items-center gap-2">
-            {/* Tutorial button */}
             <button
               onClick={runTour}
               className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-gray-50"
             >
               <PlayCircle className="h-4 w-4" />
-              Tonton Tutorial
+              Tutorial
             </button>
           </div>
         </header>

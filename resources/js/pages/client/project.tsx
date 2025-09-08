@@ -32,7 +32,7 @@ export default function ClientProjectsPage() {
         { element: '[data-tour="projects-title"]', popover: { title: 'Project Saya', description: 'Semua project yang kamu miliki dan pantau.' } },
         { element: '[data-tour="projects-table"]', popover: { title: 'Daftar Project', description: 'Klik sebuah project untuk melihat detail, bug, dan aktivitas.' } },
       ],
-      { cursor: true, headerOffsetPx: 64 }
+      { cursor: false, headerOffsetPx: 64 }
     );
   };
 
@@ -62,12 +62,11 @@ export default function ClientProjectsPage() {
       <div className="p-8 max-w-full mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h2 data-tour="projects-title" className="text-2xl font-bold text-gray-400">Project Saya</h2>
-          {/* ⬅️ NEW: tombol tutorial */}
           <button
             onClick={runTour}
             className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-gray-50"
           >
-            Tonton Tutorial
+            Tutorial
           </button>
         </div>
         <div data-tour="projects-table">

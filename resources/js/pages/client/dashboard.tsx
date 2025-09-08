@@ -71,7 +71,7 @@ export default function Dashboard({ auth, stats, recentBugs = [], devLogs = [] }
                 { element: '[data-tour="view-all"]',      popover: { title: 'Semua Bug', description: 'Buka halaman manajemen bug lengkap.' } },
                 { element: '[data-tour="dev-log"]',       popover: { title: 'Development Log', description: 'Catatan aktivitas pengembangan terbaru.' } },
             ],
-            { cursor: true, headerOffsetPx: 64, onDone: () => localStorage.setItem(key, 'done') }
+            { cursor: false, headerOffsetPx: 64, onDone: () => localStorage.setItem(key, 'done') }
         );
     };
 
@@ -121,12 +121,11 @@ export default function Dashboard({ auth, stats, recentBugs = [], devLogs = [] }
                     <div>
                         <h2 className="text-2xl font-semibold text-gray-400">Client Dashboard</h2>
                     </div>
-                    {/* ⬅️ NEW: tombol replay tutorial */}
                     <button
                         onClick={runTour}
                         className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-gray-50"
                     >
-                        Tonton Tutorial
+                        Tutorial
                     </button>
                 </header>
 
