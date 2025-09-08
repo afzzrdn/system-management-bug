@@ -76,7 +76,7 @@ type PageProps = {
     filters?: { status?: string; project_id?: string; priority?: string; type?: string };
 };
 
-// PERBAIKAN: Tipe form disesuaikan agar lebih akurat
+// PERBAIKAN: Tipe form disesuaikan agar lebih akurat dan sesuai dengan BugFormModal component
 type BugFormData = {
     title: string;
     description: string;
@@ -85,7 +85,8 @@ type BugFormData = {
     type: BugType | '';
     attachments: (File | string | null)[];
     project_id: string | number;
-    assignee_id: string | number; // Menggunakan assignee_id untuk konsistensi
+    reported_by: string | number;
+    assigned_to: string | number; // Menggunakan assigned_to sesuai dengan BugFormModal
     schedule_start_at: string | null;
     resolved_at: string | null;
     due_at: string | null;
@@ -108,7 +109,8 @@ export default function Bugs() {
         type: '',
         attachments: [],
         project_id: '',
-        assignee_id: '',
+        reported_by: '',
+        assigned_to: '',
         schedule_start_at: null,
         resolved_at: null,
         due_at: null,
@@ -140,7 +142,8 @@ export default function Bugs() {
             type: bug.type,
             attachments: [],
             project_id: bug.project.id,
-            assignee_id: bug.assignee?.id ?? '',
+            reported_by: bug.reporter?.id ?? '',
+            assigned_to: bug.assignee?.id ?? '',
             schedule_start_at: bug.schedule_start_at,
             resolved_at: bug.resolved_at,
             due_at: bug.due_at,

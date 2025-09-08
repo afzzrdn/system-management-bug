@@ -11,6 +11,7 @@ use App\Http\Controllers\Developer\BugController as DeveloperBugController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Developer\AttachmentController;
 use App\Http\Controllers\Developer\BoardController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WablasController;
 use App\Http\Controllers\WebhookController;
 use Illuminate\Support\Facades\Route;
@@ -37,7 +38,14 @@ Route::middleware(['auth'])->group(function () {
             default => abort(403),
         };
     })->name('dashboard');
+    
+    // Profile routes
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
+    
     Route::get('/notification', [NotificationController::class, 'index'])->name('notification.index');
+    Route::post('/notification/{id}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notification.mark-as-read');
     Route::get('/notifications/unread-count', function () {
         return response()->json([
             'count' => \App\Models\Notification::where('user_id', auth()->id())->where('is_read', false)->count()
