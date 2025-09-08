@@ -3,7 +3,7 @@ import { useForm, usePage, router, Head } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import BugFormModal from '@/components/BugFormModal';
 import { Listbox, Transition } from '@headlessui/react';
-import { useTour } from '@/tour/TourProvider'; // ⬅️ NEW
+import { useTour } from '@/tour/TourProvider';
 
 type Project = { id: number | string; name: string };
 type User = { id: number | string; name: string; role: 'developer' | 'client' | 'admin' };
