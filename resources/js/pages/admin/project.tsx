@@ -43,10 +43,6 @@ export default function ProjectIndex() {
             const response = await axios.get(route('projects.show', project.id));
             setSelectedProject(response.data.project);
 
-            // highlight modal saat terbuka
-            setTimeout(() => {
-              start([{ element: '[data-tour="project-detail-modal"]', popover: { title: 'Detail Project', description: 'Info singkat project & daftar bug terkait.' } }], { cursor: true, headerOffsetPx: 64 });
-            }, 60);
         } catch (error) {
             console.error("Gagal memuat detail project:", error);
             alert('Gagal memuat detail project. Silakan coba lagi.');
@@ -88,7 +84,7 @@ export default function ProjectIndex() {
           { element: '[data-tour="add-project"]',  popover: { title: 'Tambah Project', description: 'Buat project baru untuk mulai melacak bug.' } },
           { element: '[data-tour="projects-table"]', popover: { title: 'Daftar Project', description: 'Klik baris untuk melihat detail project.' } },
         ],
-        { cursor: true, headerOffsetPx: 64 }
+        { cursor: false, headerOffsetPx: 64 }
       );
     };
 
@@ -104,7 +100,7 @@ export default function ProjectIndex() {
                         onClick={runTour}
                         className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-gray-50"
                       >
-                        Tonton Tutorial
+                        Tutorial
                       </button>
                       <button
                         data-tour="add-project"
@@ -148,7 +144,7 @@ export default function ProjectIndex() {
             />
 
             {selectedProject && (
-                <div data-tour="project-detail-modal">
+                <div>
                   <ProjectDetailModal project={selectedProject} onClose={closeDetailModal} />
                 </div>
             )}

@@ -92,7 +92,7 @@ export default function Dashboard({ users, flash, filters }: DashboardProps) {
         { element: '[data-tour="user-table"]', popover: { title: 'Daftar Pengguna', description: 'Klik baris untuk melihat detail akun.' } },
         { element: '[data-tour="pagination"]', popover: { title: 'Navigasi Halaman', description: 'Pindah halaman bila data banyak.' } },
       ],
-      { cursor: true, headerOffsetPx: 64 }
+      { cursor: false, headerOffsetPx: 64 }
     );
   };
 
@@ -104,12 +104,11 @@ export default function Dashboard({ users, flash, filters }: DashboardProps) {
         <div className="flex justify-between items-baseline gap-4">
           <h2 className="text-2xl font-semibold text-gray-400">Manajemen Pengguna</h2>
           <div className="flex items-center mb-6 gap-4">
-            {/* ⬅️ NEW: tombol tutorial */}
             <button
               onClick={runTour}
               className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-gray-50"
             >
-              Tonton Tutorial
+              Tutorial
             </button>
 
             <div data-tour="search" className="w-full md:flex-grow">

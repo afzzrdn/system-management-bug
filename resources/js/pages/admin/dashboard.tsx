@@ -114,7 +114,7 @@ export default function Dashboard({
           { element: '[data-tour="chart-status"]',  popover: { title: 'Statistik Status', description: 'Distribusi status tiket.' } },
           { element: '[data-tour="chart-priority"]',popover: { title: 'Statistik Prioritas', description: 'Distribusi prioritas tiket.' } },
         ],
-        { cursor: true, headerOffsetPx: 64 }
+        { cursor: false, headerOffsetPx: 64 }
       );
     };
 
@@ -125,12 +125,11 @@ export default function Dashboard({
             <div className="p-8">
                 <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
                     <h2 className="text-2xl font-semibold text-gray-400">Admin Dashboard</h2>
-                    {/* ⬅️ NEW */}
                     <button
                       onClick={runTour}
                       className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-gray-50"
                     >
-                      Tonton Tutorial
+                      Tutorial
                     </button>
                 </div>
 

@@ -89,7 +89,7 @@ export default function Bugs() {
         { element: '[data-tour="bug-table"]',     popover: { title: 'Daftar Bug', description: 'Daftar tiket sesuai filter kamu.' } },
         { element: '[data-tour="row-view"]',      popover: { title: 'Detail Bug', description: 'Klik “Lihat” untuk membuka detail & diskusi.' } },
       ],
-      { cursor: true, headerOffsetPx: 64 }
+      { cursor: false, headerOffsetPx: 64 }
     );
   };
 
@@ -104,9 +104,8 @@ export default function Bugs() {
           </div>
           <div className="relative">
             <div className="flex items-center gap-2">
-              {/* ⬅️ NEW: tombol tutorial */}
               <button onClick={runTour} className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-gray-50">
-                Tonton Tutorial
+                Tutorial
               </button>
 
               <button data-tour="filter" onClick={() => setFilterOpen(v => !v)} className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-gray-50">
