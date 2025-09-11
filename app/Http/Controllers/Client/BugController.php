@@ -13,15 +13,29 @@ use App\Enums\BugType;
 
 class BugController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
+        $page = $request->get('page', 1);
+        $perPage = 10;
+        $loadRandom = $request->boolean('load_random', false);
 
-        $bugs = Bug::with(['project', 'reporter', 'assignee', 'attachments'])
-            ->where('reported_by', $user->id)
-            ->orderBy('created_at', 'asc')
-            ->get();
+        if ($loadRandom) {
+            // Load random bugs for infinite scroll
+            $bugs = Bug::with(['project', 'reporter', 'assignee', 'attachments'])
+                ->where('reported_by', $user->id)
+                ->inRandomOrder()
+                ->limit($perPage)
+                ->get();
+        } else {
+            // Load initial bugs with pagination
+            $bugs = Bug::with(['project', 'reporter', 'assignee', 'attachments'])
+                ->where('reported_by', $user->id)
+                ->orderBy('created_at', 'desc')
+                ->paginate($perPage, ['*'], 'page', $page);
+        }
 
+        // Add version numbers to bugs
         $major = 1; $minor = 0; $patch = 0;
         foreach ($bugs as $bug) {
             $bug->version = "{$major}.{$minor}.{$patch}";
@@ -29,16 +43,30 @@ class BugController extends Controller
             if ($patch > 9) { $patch = 0; $minor++; }
             if ($minor > 9) { $minor = 0; $major++; }
         }
-        $bugs = $bugs->reverse()->values();
 
         $projects = Project::where('client_id', $user->id)->select('id','name')->get();
         $users    = User::where('role', 'developer')->select('id','name')->get();
 
+        // Return JSON for AJAX requests (infinite scroll)
+        if ($request->expectsJson()) {
+            return response()->json([
+                'bugs' => $loadRandom ? $bugs : $bugs->items(),
+                'has_more' => $loadRandom ? true : $bugs->hasMorePages(),
+                'next_page' => $loadRandom ? null : ($bugs->hasMorePages() ? $bugs->currentPage() + 1 : null),
+            ]);
+        }
+
+        // Return Inertia response for initial page load
         return inertia('client/bug', [
-            'bugs'     => $bugs,
+            'bugs'     => $loadRandom ? $bugs : $bugs->items(),
             'projects' => $projects,
             'users'    => $users,
             'auth'     => ['user' => $user],
+            'pagination' => $loadRandom ? null : [
+                'current_page' => $bugs->currentPage(),
+                'has_more' => $bugs->hasMorePages(),
+                'next_page' => $bugs->hasMorePages() ? $bugs->currentPage() + 1 : null,
+            ],
         ]);
     }
 
