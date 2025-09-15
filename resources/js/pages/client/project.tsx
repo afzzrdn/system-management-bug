@@ -4,7 +4,7 @@ import { useState } from 'react';
 import ProjectDetailModal from '@/components/ProjectDetail';
 import ProjectTable from '@/components/ProjectTable';
 import axios from 'axios';
-import { useTour } from '@/tour/TourProvider'; // ⬅️ NEW
+import { useTour } from '@/tour/TourProvider';
 
 type Project = {
   id: number;
@@ -24,7 +24,7 @@ export default function ClientProjectsPage() {
   const projects = projectsFromProps ?? [];
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
-  const { start } = useTour(); // ⬅️ NEW
+  const { start } = useTour();
 
   const runTour = () => {
     start(
@@ -42,11 +42,6 @@ export default function ClientProjectsPage() {
     try {
       const { data } = await axios.get(`/client/project/${project.id}`);
       setSelectedProject(data.project);
-
-      // setelah modal muncul, sorot modalnya
-      setTimeout(() => {
-        start([{ element: '[data-tour="project-detail-modal"]', popover: { title: 'Detail Project', description: 'Informasi singkat project & daftar bug terkait.' } }], { cursor: true, headerOffsetPx: 64 });
-      }, 50);
     } catch {
       alert('Gagal memuat detail project. Silakan coba lagi.');
     } finally {
