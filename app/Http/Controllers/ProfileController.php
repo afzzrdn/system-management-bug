@@ -40,6 +40,7 @@ class ProfileController extends Controller
                 Rule::unique('users')->ignore($user->id),
             ],
             'phone' => 'required|string|regex:/^628[0-9]{8,15}$/',
+            'asal' => 'required|string|max:255',
         ]);
 
         $user->update($validated);

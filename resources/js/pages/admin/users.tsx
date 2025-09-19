@@ -8,7 +8,7 @@ import UserDetail from '@/components/UserDetail';
 import { useTour } from '@/tour/TourProvider'; // ⬅️ NEW
 
 interface PageLink { url: string | null; label: string; active: boolean; }
-interface User { id: number; name: string; email: string; role: 'admin' | 'developer' | 'client'; }
+interface User { id: number; name: string; email: string; phone: string; asal: string; role: 'admin' | 'developer' | 'client'; }
 interface PaginatedUsers { data: User[]; links: PageLink[]; from: number; to: number; total: number; }
 interface DashboardProps {
   auth: { user: User };
@@ -128,6 +128,8 @@ export default function Dashboard({ users, flash, filters }: DashboardProps) {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nomor HP</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asal</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
               </tr>
             </thead>
@@ -138,6 +140,8 @@ export default function Dashboard({ users, flash, filters }: DashboardProps) {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{users.from + index}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.email}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.phone || '-'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.asal || '-'}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getRoleBadgeClass(user.role)}`}>{user.role}</span>
                     </td>
@@ -145,7 +149,7 @@ export default function Dashboard({ users, flash, filters }: DashboardProps) {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">Tidak ada pengguna yang ditemukan.</td>
+                  <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">Tidak ada pengguna yang ditemukan.</td>
                 </tr>
               )}
             </tbody>

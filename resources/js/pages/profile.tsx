@@ -18,6 +18,7 @@
         name: user?.name || '',
         email: user?.email || '',
         phone: user?.phone || '',
+        asal: user?.asal || '',
     });
 
     const [passwordData, setPasswordData] = useState({
@@ -141,6 +142,25 @@
                     />
                     {errors.phone && (
                         <p className="mt-2 text-sm text-red-600">{errors.phone}</p>
+                    )}
+                    </div>
+
+                    <div>
+                    <label htmlFor="asal" className="block text-sm font-medium text-gray-700">
+                        Asal Daerah
+                    </label>
+                    <input
+                        id="asal"
+                        name="asal"
+                        type="text"
+                        value={profileData.asal}
+                        onChange={handleProfileChange}
+                        className="mt-1 p-2.5 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        placeholder="Contoh: Jakarta, Bandung, dll"
+                        required
+                    />
+                    {errors.asal && (
+                        <p className="mt-2 text-sm text-red-600">{errors.asal}</p>
                     )}
                     </div>
 

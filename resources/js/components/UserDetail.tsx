@@ -5,6 +5,8 @@ interface UserDetailProps {
         id: number;
         name: string;
         email: string;
+        phone: string;
+        asal: string;
         role: string;
     };
     onClose: () => void;
@@ -23,6 +25,8 @@ const UserDetail: React.FC<UserDetailProps> = ({ user, onClose }) => {
                 <div className="space-y-2">
                     <p><strong>Nama:</strong> {user.name}</p>
                     <p><strong>Email:</strong> {user.email}</p>
+                    <p><strong>Nomor HP:</strong> {user.phone || '-'}</p>
+                    <p><strong>Asal:</strong> {user.asal || '-'}</p>
                     <p><strong>Role:</strong> {user.role}</p>
 
                     {user.role === 'developer' && (

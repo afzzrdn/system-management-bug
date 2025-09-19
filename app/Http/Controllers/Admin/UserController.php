@@ -36,6 +36,8 @@ class UserController extends Controller
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
+                    'phone' => $user->phone,
+                    'asal' => $user->asal,
                     'role' => $user->role->value,
                 ]),
             'filters' => $request->only(['search', 'role']),

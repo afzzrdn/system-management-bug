@@ -8,6 +8,7 @@ export interface User {
     email: string;
     role: string;
     phone: string;
+    asal: string;
 }
 
 interface AppLayoutProps {

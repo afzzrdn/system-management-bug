@@ -62,6 +62,11 @@ export default function Login() {
                                     className="h-12 mt-1"
                                 />
                             </div>
+                            <div className="text-right">
+                                <Link href={route('password.request')} className="text-sm text-indigo-600 hover:underline">
+                                    Lupa Password?
+                                </Link>
+                            </div>
                             <Button variant="secondary" type="submit" className="h-12 w-full text-base font-semibold" disabled={processing}>
                                 {processing ? 'Processing...' : 'Sign In'}
                             </Button>
