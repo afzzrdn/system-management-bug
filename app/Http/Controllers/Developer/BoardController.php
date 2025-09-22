@@ -95,7 +95,6 @@ class BoardController extends Controller
             return;
         }
 
-        // Untuk status selain resolved
         $statusText = match ($bug->status) {
             'open'        => 'dibuka',
             'in_progress' => 'sedang ditangani',

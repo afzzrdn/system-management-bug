@@ -19,6 +19,7 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|unique:users,email',
             'phone' => 'required|string|regex:/^628[0-9]{8,15}$/',
+            'asal' => 'required|string|max:255',
             'password' => 'required|string|min:8|confirmed',
         ]);
 
@@ -26,6 +27,7 @@ class AuthController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'phone' => $validated['phone'],
+            'asal' => $validated['asal'],
             'password' => Hash::make($validated['password']),
             'role' => UserRole::Client, // Pastikan enum UserRole ada dengan case 'User'
         ]);

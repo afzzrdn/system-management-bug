@@ -10,6 +10,7 @@ export default function Register() {
         name: '',
         email: '',
         phone: '',
+        asal: '',
         password: '',
         password_confirmation: '',
     });
@@ -68,6 +69,19 @@ export default function Register() {
                                     className="h-12 mt-1"
                                 />
                                 {errors.phone && <p className="text-red-500 mt-2 text-sm">{errors.phone}</p>}
+                            </div>
+                            <div>
+                                <Label htmlFor="asal">Asal Daerah</Label>
+                                <Input
+                                    id="asal"
+                                    type="text"
+                                    placeholder="Contoh: Jakarta, Bandung, dll"
+                                    required
+                                    value={data.asal}
+                                    onChange={(e) => setData('asal', e.target.value)}
+                                    className="h-12 mt-1"
+                                />
+                                {errors.asal && <p className="text-red-500 mt-2 text-sm">{errors.asal}</p>}
                             </div>
                             <div>
                                 <Label htmlFor="password">Password</Label>

@@ -11,8 +11,10 @@ use App\Http\Controllers\Developer\BugController as DeveloperBugController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Developer\AttachmentController;
 use App\Http\Controllers\Developer\BoardController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WablasController;
 use App\Http\Controllers\WebhookController;
+use App\Http\Controllers\PasswordResetController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
@@ -21,6 +23,14 @@ Route::get('/', fn() => Redirect::to('/login'));
 
 Route::get('/login', fn() => Inertia::render('auth/login'))->name('login');
 Route::get('/register', fn() => Inertia::render('auth/register'))->name('register');
+
+// Password Reset Routes
+Route::get('/forgot-password', [PasswordResetController::class, 'showForgotForm'])->name('password.request');
+Route::post('/forgot-password', [PasswordResetController::class, 'sendOtp']);
+Route::get('/verify-otp', [PasswordResetController::class, 'showVerifyForm'])->name('password.verify');
+Route::post('/verify-otp', [PasswordResetController::class, 'verifyOtp'])->name('password.verify-otp');
+Route::get('/reset-password/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset.form');
+Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->name('password.reset');
 
 // WEBHOOK WABLAS (untuk menerima pesan masuk dari WhatsApp)
 Route::post('/wablas/webhook', [WablasController::class, 'handleWebhook'])->name('wablas.webhook');
@@ -37,7 +47,14 @@ Route::middleware(['auth'])->group(function () {
             default => abort(403),
         };
     })->name('dashboard');
+
+    // Profile routes
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
+
     Route::get('/notification', [NotificationController::class, 'index'])->name('notification.index');
+    Route::post('/notification/{id}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notification.mark-as-read');
     Route::get('/notifications/unread-count', function () {
         return response()->json([
             'count' => \App\Models\Notification::where('user_id', auth()->id())->where('is_read', false)->count()

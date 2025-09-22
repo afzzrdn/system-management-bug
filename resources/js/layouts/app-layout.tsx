@@ -1,12 +1,14 @@
 import { ReactNode, useEffect, useState } from "react";
 import { usePage, Link, router } from "@inertiajs/react";
-import { Bell, LogOut, LayoutDashboard, Users, Bug, Folder, ChevronsLeft, ShieldCheck } from "lucide-react";
+import { Bell, LogOut, LayoutDashboard, Users, Bug, File, Folder, ChevronsLeft, ShieldCheck } from "lucide-react";
 
-interface User {
-    id: number;
+export interface User {
+    id: string;
     name: string;
     email: string;
     role: string;
+    phone: string;
+    asal: string;
 }
 
 interface AppLayoutProps {
@@ -21,7 +23,7 @@ const navItems = [
     { title: "Bug", href: "/developer/bugs", icon: Bug, roles: ["developer"] },
     { title: "Project", href: "/client/project", icon: Folder, roles: ["client"] },
     { title: "Bug", href: "/client/bugs", icon: Bug, roles: ["client"] },
-    { title: "Board", href: "/developer/board", icon: Bug, roles: ["developer"] },
+    { title: "Board", href: "/developer/board", icon: File, roles: ["developer"] },
 ];
 
 export default function AppLayout({ children }: AppLayoutProps) {
@@ -97,7 +99,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     <div className="border-t border-gray-200 p-4">
                         <div className={`flex items-center ${isSidebarCollapsed ? 'flex-col gap-4' : 'flex-row gap-3'}`}>
 
-                            <div className={`flex items-center gap-3 ${isSidebarCollapsed ? 'justify-center' : 'flex-1'}`}>
+                            <Link href="/profile" className={`flex items-center gap-3 ${isSidebarCollapsed ? 'justify-center' : 'flex-1'} hover:bg-gray-100 p-2 rounded-md transition-colors`}>
                                 <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-700 flex-shrink-0">
                                     {user.name?.charAt(0)?.toUpperCase() ?? "U"}
                                 </div>
@@ -107,7 +109,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                                         <p className="text-gray-500 text-sm capitalize">{user.role}</p>
                                     </div>
                                 )}
-                            </div>
+                            </Link>
 
                             {/* FIXED: Added conditional flex-col class */}
                             <div className={`flex items-center gap-2 ${isSidebarCollapsed ? 'flex-col' : ''}`}>

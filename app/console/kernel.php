@@ -9,7 +9,7 @@ class Kernel extends ConsoleKernel
 {
     protected function schedule(Schedule $schedule): void
     {
-        $schedule->command('bugs:check-overdue')->everyFifteenMinutes();
+        $schedule->command('bugs:check-overdue')->everyMinute();
     }
 
     protected function commands(): void
