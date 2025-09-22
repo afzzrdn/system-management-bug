@@ -99,7 +99,6 @@ export default function Bugs() {
     const [previewImage, setPreviewImage] = useState<string | null>(null);
     const { start } = useTour();
 
-    // PERBAIKAN: Nilai awal form yang lebih lengkap dan akurat
     const initialFormValues: BugFormData = {
         title: '',
         description: '',
