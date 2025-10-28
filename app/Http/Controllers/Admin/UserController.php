@@ -14,15 +14,11 @@ use Inertia\Response;
 
 class UserController extends Controller
 {
-    /**
-     * Menampilkan daftar pengguna dengan fungsionalitas pencarian dan filter.
-     */
     public function index(Request $request): Response
     {
         return Inertia::render('admin/users', [
             'users' => User::query()
                 ->latest()
-                // Menerapkan filter pencarian jika ada
                 ->when($request->input('search'), function ($query, $search) {
                     $query->where('name', 'like', "%{$search}%")
                         ->orWhere('email', 'like', "%{$search}%");
@@ -48,9 +44,6 @@ class UserController extends Controller
         ]);
     }
 
-    /**
-     * Menampilkan form untuk mengedit pengguna.
-     */
     public function edit(User $user): Response
     {
         return Inertia::render('Users/Edit', [
@@ -64,9 +57,6 @@ class UserController extends Controller
         ]);
     }
 
-    /**
-     * Memperbarui data pengguna di database.
-     */
     public function update(Request $request, User $user)
     {
         $data = $request->validate([
@@ -74,12 +64,14 @@ class UserController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
             'role' => ['required', new Enum(UserRole::class)],
+            'phone' => ['nullable', 'string', 'max:20'], 
+            'asal' => ['nullable', 'string', 'max:255'],
         ]);
 
         if (!empty($data['password'])) {
             $data['password'] = Hash::make($data['password']);
         } else {
-            unset($data['password']); // Hapus dari array jika kosong
+            unset($data['password']);
         }
 
         $user->update($data);
@@ -88,12 +80,8 @@ class UserController extends Controller
             ->with('success', 'User berhasil diupdate.');
     }
 
-    /**
-     * Menghapus pengguna dari database.
-     */
     public function destroy(User $user)
     {
-        // Mencegah pengguna menghapus akunnya sendiri
         if (Auth::id() === $user->id) {
             return redirect()->route('users.index')
                 ->with('error', 'Anda tidak dapat menghapus akun Anda sendiri.');

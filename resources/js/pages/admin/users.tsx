@@ -5,7 +5,8 @@ import { debounce } from 'lodash';
 import FilterDropdown from '@/components/DropDown';
 import SearchInput from '@/components/SearchInput';
 import UserDetail from '@/components/UserDetail';
-import { useTour } from '@/tour/TourProvider'; // ⬅️ NEW
+import { useTour } from '@/tour/TourProvider';
+import UserEditModal from '@/components/UserEditModal';
 
 interface PageLink { url: string | null; label: string; active: boolean; }
 interface User { id: number; name: string; email: string; phone: string; asal: string; role: 'admin' | 'developer' | 'client'; }
@@ -52,9 +53,15 @@ export default function Dashboard({ users, flash, filters }: DashboardProps) {
   const [search, setSearch] = useState(filters.search || '');
   const [role, setRole] = useState(filters.role || '');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const { start } = useTour(); // ⬅️ NEW
+  const [editingUser, setEditingUser] = useState<User | null>(null); // <-- State baru untuk modal edit
+  const { start } = useTour();
 
   const handleRowClick = (user: User) => setSelectedUser(user);
+
+  // Fungsi edit diubah untuk membuka modal
+  const handleEdit = (user: User) => {
+    setEditingUser(user);
+  };
 
   const handleDelete = (user: User) => {
     if (confirm(`Apakah Anda yakin ingin menghapus pengguna: ${user.name}?`)) {
@@ -87,9 +94,9 @@ export default function Dashboard({ users, flash, filters }: DashboardProps) {
   const runTour = () => {
     start(
       [
-        { element: '[data-tour="search"]',     popover: { title: 'Cari Pengguna', description: 'Ketik nama atau email untuk memfilter daftar.' } },
-        { element: '[data-tour="role-filter"]',popover: { title: 'Filter Role', description: 'Tampilkan hanya role tertentu.' } },
-        { element: '[data-tour="user-table"]', popover: { title: 'Daftar Pengguna', description: 'Klik baris untuk melihat detail akun.' } },
+        { element: '[data-tour="search"]', popover: { title: 'Cari Pengguna', description: 'Ketik nama atau email untuk memfilter daftar.' } },
+        { element: '[data-tour="role-filter"]', popover: { title: 'Filter Role', description: 'Tampilkan hanya role tertentu.' } },
+        { element: '[data-tour="user-table"]', popover: { title: 'Daftar Pengguna', description: 'Klik baris untuk melihat detail. Gunakan tombol aksi untuk edit/hapus.' } },
         { element: '[data-tour="pagination"]', popover: { title: 'Navigasi Halaman', description: 'Pindah halaman bila data banyak.' } },
       ],
       { cursor: false, headerOffsetPx: 64 }
@@ -110,11 +117,9 @@ export default function Dashboard({ users, flash, filters }: DashboardProps) {
             >
               Tutorial
             </button>
-
             <div data-tour="search" className="w-full md:flex-grow">
               <SearchInput value={search} onChange={setSearch} placeholder="Cari pengguna..." className="w-full md:flex-grow" />
             </div>
-
             <div data-tour="role-filter" className="w-full md:w-48">
               <FilterDropdown options={roles} value={role} onChange={setRole} placeholder="Semua Role" widthClassName="w-full md:w-48" />
             </div>
@@ -131,12 +136,13 @@ export default function Dashboard({ users, flash, filters }: DashboardProps) {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nomor HP</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asal</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {users.data.length > 0 ? (
                 users.data.map((user, index) => (
-                  <tr key={user.id} onClick={() => handleRowClick(user)} className='cursor-pointer'>
+                  <tr key={user.id} onClick={() => handleRowClick(user)} className='cursor-pointer hover:bg-gray-50'>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{users.from + index}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.email}</td>
@@ -145,11 +151,27 @@ export default function Dashboard({ users, flash, filters }: DashboardProps) {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getRoleBadgeClass(user.role)}`}>{user.role}</span>
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className='flex items-center justify-end gap-x-4'>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleEdit(user); }}
+                          className="text-indigo-600 hover:text-indigo-900"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDelete(user); }}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          Hapus
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">Tidak ada pengguna yang ditemukan.</td>
+                  <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">Tidak ada pengguna yang ditemukan.</td>
                 </tr>
               )}
             </tbody>
@@ -163,7 +185,15 @@ export default function Dashboard({ users, flash, filters }: DashboardProps) {
         )}
       </div>
 
+      {/* Render modal detail dan modal edit */}
       {selectedUser && <UserDetail user={selectedUser} onClose={() => setSelectedUser(null)} />}
+
+      {editingUser && (
+        <UserEditModal
+          user={editingUser}
+          onClose={() => setEditingUser(null)}
+        />
+      )}
     </AppLayout>
   );
 }

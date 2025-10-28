@@ -3,7 +3,6 @@ import AppLayout from '@/layouts/app-layout';
 import { Head, usePage } from '@inertiajs/react';
 import { ArrowUpRight, CheckCircle, Code, Wrench, FolderOpenDot, PlayCircle } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, PieLabelRenderProps } from 'recharts';
-import { LineChart, Line, XAxis, YAxis, Tooltip as RTooltip, CartesianGrid } from 'recharts';
 import { ReactNode, useState } from 'react';
 import { useTour } from '@/tour/TourProvider';
 
