@@ -1,15 +1,25 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useForm, usePage, router, Head } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import BugFormModal from '@/components/BugReportModal';
 import BugDetail from '@/components/BugDetail';
-import { Eye, Plus, Trash2, Filter, X, Search, ChevronDown } from 'lucide-react';
+import { Eye, Plus, Trash2, Filter, X, Search, ChevronDown, Loader2 } from 'lucide-react';
 import type { Bug } from '@/types/bug';
 import { useTour } from '@/tour/TourProvider'; // ⬅️ NEW
+import { useInfiniteScroll } from '@/hooks/use-infinite-scroll';
 
 type Project = { id: number; name: string; };
 type User = { id: number; name: string; role: 'developer' | 'client' | 'admin'; };
-type PageProps = { bugs: Bug[]; projects: Project[]; users: User[]; };
+type PageProps = { 
+  bugs: Bug[]; 
+  projects: Project[]; 
+  users: User[]; 
+  pagination?: {
+    current_page: number;
+    has_more: boolean;
+    next_page: number | null;
+  };
+};
 
 export type BugFormData = {
   title: string;
@@ -24,7 +34,7 @@ export type BugFormData = {
 type StatusOpt = 'all' | 'open' | 'in_progress' | 'resolved' | 'closed';
 
 export default function Bugs() {
-  const { bugs = [], projects = [], users = [] } = usePage<PageProps>().props;
+  const { bugs: initialBugs = [], projects = [], users = [], pagination } = usePage<PageProps>().props;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBug, setEditingBug] = useState<Bug | null>(null);
   const [detailBug, setDetailBug] = useState<Bug | null>(null);
@@ -35,6 +45,31 @@ export default function Bugs() {
   const [assigneeId, setAssigneeId] = useState<string>('');
   const [search, setSearch] = useState<string>('');
   const { start } = useTour(); // ⬅️ NEW
+
+  // Initialize infinite scroll with proper endpoint
+  const {
+    data: bugs,
+    loading: loadingMore,
+    hasMore,
+    loadMore,
+    resetData,
+  } = useInfiniteScroll({
+    initialData: initialBugs,
+    endpoint: route('client.bugs.index'),
+    threshold: 300,
+    enabled: status === 'all' && !projectId && !assigneeId && !search, // Only enable when showing all items
+    onLoad: (newBugs) => {
+      console.log('Loaded more bugs:', newBugs.length);
+    },
+  });
+
+  // Reset infinite scroll when filters change
+  useEffect(() => {
+    if (status !== 'all' || projectId || assigneeId || search) {
+      // When filters are applied, use only initial bugs
+      resetData(initialBugs);
+    }
+  }, [status, projectId, assigneeId, search, initialBugs, resetData]);
 
   const initialFormValues: BugFormData = { title: '', description: '', priority: 'low', status: 'open', attachments: [], project_id: '', assigned_to: '' };
   const { data, setData, post, processing, errors, reset, transform } = useForm(initialFormValues);
@@ -203,6 +238,29 @@ export default function Bugs() {
                   <p className="mt-1 text-sm text-slate-500">Coba ubah filter atau tambah bug baru.</p>
                 </div>
               )}
+              
+              {/* Mobile infinite scroll loading indicator */}
+              {(status === 'all' && !projectId && !assigneeId && !search && filteredBugs.length > 0) && (
+                <div className="flex justify-center py-4">
+                  {loadingMore ? (
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Memuat...</span>
+                    </div>
+                  ) : hasMore ? (
+                    <button
+                      onClick={loadMore}
+                      className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    >
+                      Muat Lebih
+                    </button>
+                  ) : (
+                    <div className="text-xs text-gray-400">
+                      Konten acak
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="hidden md:block">
@@ -262,6 +320,29 @@ export default function Bugs() {
               </div>
             </div>
           </div>
+          
+          {/* Infinite scroll loading indicator */}
+          {(status === 'all' && !projectId && !assigneeId && !search) && (
+            <div className="flex justify-center py-6">
+              {loadingMore ? (
+                <div className="flex items-center gap-2 text-sm text-gray-500">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Memuat lebih banyak...</span>
+                </div>
+              ) : hasMore ? (
+                <button
+                  onClick={loadMore}
+                  className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Muat Lebih Banyak
+                </button>
+              ) : (
+                <div className="text-sm text-gray-400">
+                  Menampilkan konten acak...
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <BugFormModal isOpen={isModalOpen} onClose={closeModal} onSubmit={handleSubmit} isEditing={isEditing} form={{ data, setData, errors, processing }} projects={projects} users={users} editingBug={editingBug} />
