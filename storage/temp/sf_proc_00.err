@@ -1,0 +1,17 @@
+[Wed Dec 10 09:19:57 2025] PHP 8.3.20 Development Server (http://127.0.0.1:8000) started
+[Wed Dec 10 09:19:57 2025] 127.0.0.1:49404 Accepted
+[Wed Dec 10 09:20:24 2025] 127.0.0.1:49404 Closing
+[Wed Dec 10 09:20:24 2025] 127.0.0.1:49402 Accepted
+[Wed Dec 10 09:20:24 2025] 127.0.0.1:49403 Accepted
+[Wed Dec 10 09:20:24 2025] 127.0.0.1:49402 Closing
+[Wed Dec 10 09:20:24 2025] 127.0.0.1:49403 Closed without sending a request; it was probably just an unused speculative preconnection
+[Wed Dec 10 09:20:24 2025] 127.0.0.1:49403 Closing
+[Wed Dec 10 09:21:03 2025] 127.0.0.1:49451 Accepted
+[Wed Dec 10 09:21:04 2025] 127.0.0.1:49451 Closing
+[Wed Dec 10 09:21:04 2025] 127.0.0.1:49453 Accepted
+[Wed Dec 10 09:21:04 2025] 127.0.0.1:49455 Accepted
+[Wed Dec 10 09:21:04 2025] 127.0.0.1:49453 [200]: GET /favicon.svg
+[Wed Dec 10 09:21:04 2025] 127.0.0.1:49453 Closing
+[Wed Dec 10 09:21:04 2025] 127.0.0.1:49455 [200]: GET /favicon.ico
+[Wed Dec 10 09:21:04 2025] 127.0.0.1:49455 Closing
+^C

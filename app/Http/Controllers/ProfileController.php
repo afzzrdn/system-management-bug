@@ -11,7 +11,7 @@ use Inertia\Inertia;
 class ProfileController extends Controller
 {
     /**
-     * Display the profile page.
+     * Display the user's profile form.
      *
      * @return \Inertia\Response
      */

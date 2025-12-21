@@ -1,9 +1,10 @@
-import React, { useState, useEffect, Fragment } from 'react';
+import React, { useState, useEffect, Fragment, useCallback } from 'react';
 import { useForm, usePage, router, Head } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import BugFormModal from '@/components/BugFormModal';
 import { Listbox, Transition } from '@headlessui/react';
-import { useTour } from '@/tour/TourProvider'; // ⬅️ NEW
+import { useTour } from '@/tour/TourProvider';
+import { debounce } from 'lodash';
 
 type Project = { id: number | string; name: string };
 type User = { id: number | string; name: string; role: 'developer' | 'client' | 'admin' };
@@ -30,7 +31,7 @@ type PageProps = {
   bugs: Bug[];
   projects: Project[];
   users: User[];
-  filters?: { status?: string; project_id?: string; priority?: string; type?: string };
+  filters?: { search?: string; status?: string; project_id?: string; priority?: string; type?: string };
 };
 
 type BugFormData = {
@@ -51,9 +52,22 @@ export default function Bugs() {
   const { bugs, projects, users, filters: initialFilters = {} } = usePage<PageProps>().props;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBug, setEditingBug] = useState<Bug | null>(null);
-  const [filters, setFilters] = useState({ status: initialFilters.status || '', project_id: initialFilters.project_id || '', priority: initialFilters.priority || '', type: initialFilters.type || '' });
+  const [filters, setFilters] = useState({ search: initialFilters.search || '', status: initialFilters.status || '', project_id: initialFilters.project_id || '', priority: initialFilters.priority || '', type: initialFilters.type || '' });
+  const [searchTerm, setSearchTerm] = useState(initialFilters.search || '');
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const { start } = useTour(); // ⬅️ NEW
+  const { start } = useTour();
+
+  const debouncedSearch = useCallback(
+    debounce((value: string) => {
+      setFilters(prev => ({ ...prev, search: value }));
+    }, 500),
+    []
+  );
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    debouncedSearch(e.target.value);
+  };
 
   const initialFormValues: Omit<BugFormData, 'schedule_start_at' | 'delay_reason'> = {
     title: '',
@@ -81,7 +95,10 @@ export default function Bugs() {
     router.get(route('bugs.index'), activeFilters, { preserveState: true, replace: true, only: ['bugs', 'filters'] });
   }, [filters]);
 
-  const resetFilters = () => setFilters({ status: '', project_id: '', priority: '', type: '' });
+  const resetFilters = () => {
+    setFilters({ search: '', status: '', project_id: '', priority: '', type: '' });
+    setSearchTerm('');
+  };
 
   const openAddModal = () => {
     setEditingBug(null);
@@ -172,6 +189,15 @@ export default function Bugs() {
         </div>
 
         <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+          <div className="mb-6">
+            <input
+              type="text"
+              placeholder="Cari judul atau deskripsi bug..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+              className="w-full rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            />
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-6 items-end">
             <div className="lg:col-span-2" data-tour="filters-status">
               <label className="text-sm font-medium text-slate-700 block mb-2">Filter by Status</label>
