@@ -1,10 +1,11 @@
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link } from '@inertiajs/react';
 import { ArrowUpRight, Bell, CodeXml, User, Verified } from 'lucide-react';
-import { ReactNode } from 'react';
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, PieLabelRenderProps } from 'recharts';
+import React, { ReactNode, Suspense } from 'react';
 import { User as Auth } from '@/types/index'
 import { useTour } from '@/tour/TourProvider';
+
+const DashboardCharts = React.lazy(() => import('@/components/admin/DashboardCharts'));
 
 interface DashboardProps {
     auth: { user: Auth };
@@ -22,6 +23,10 @@ interface DashboardProps {
         medium: number;
         high: number;
         critical: number;
+    };
+    bugTrends: {
+        labels: string[];
+        data: number[];
     };
 }
 
@@ -49,7 +54,7 @@ const StatCard = ({ icon, title, value, iconBgColor, href }: StatCardProps) => (
 );
 
 export default function Dashboard({
-  userCount, bugCount, projectCount, bugStatusStats, bugPriorityStats,
+  userCount, bugCount, projectCount, bugStatusStats, bugPriorityStats, bugTrends
 }: DashboardProps) {
     const { start } = useTour();
 
@@ -70,40 +75,6 @@ export default function Dashboard({
     const STATUS_COLORS_GRADIENT = statusData.map((_, i) => `url(#statusGradient${i})`);
     const PRIORITY_COLORS_GRADIENT = priorityData.map((_, i) => `url(#priorityGradient${i})`);
 
-    const renderLabel = ({
-    cx,
-    cy,
-    midAngle,
-    innerRadius,
-    outerRadius,
-    percent,
-    }: PieLabelRenderProps) => {
-    if ((percent ?? 0) === 0) return null;
-
-    const RAD = Math.PI / 180;
-
-    const cxNum = Number(cx ?? 0);
-    const cyNum = Number(cy ?? 0);
-    const inner = Number(innerRadius ?? 0);
-    const outer = Number(outerRadius ?? 0);
-
-    const r = inner + (outer - inner) * 0.6;
-    const x = cxNum + r * Math.cos(-midAngle * RAD);
-    const y = cyNum + r * Math.sin(-midAngle * RAD);
-
-    return (
-        <text
-        x={x}
-        y={y}
-        textAnchor="middle"
-        dominantBaseline="central"
-        className="text-sm font-semibold text-gray-50 drop-shadow-sm"
-        >
-        {`${((percent ?? 0) * 100).toFixed(0)}%`}
-        </text>
-    );
-    };
-
     const runTour = () => {
       start(
         [
@@ -117,6 +88,11 @@ export default function Dashboard({
         { cursor: false, headerOffsetPx: 64 }
       );
     };
+
+    const trendData = (bugTrends?.labels || []).map((label, index) => ({
+        name: label,
+        count: bugTrends?.data[index] ?? 0
+    }));
 
     return (
         <AppLayout>
@@ -147,81 +123,17 @@ export default function Dashboard({
                         <h3 className="text-xl font-semibold text-gray-800">Statistik Bug</h3>
                     </div>
 
-                    <div className="px-4 md:px-6 py-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        {/* STATUS CHART */}
-                        <div className="flex flex-col" data-tour="chart-status">
-                            <h4 className="mb-2 text-center text-lg font-medium text-gray-600">Status</h4>
-                            <div className="h-[340px]">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <PieChart>
-                                        <defs>
-                                            {statusData.map((_, i) => (
-                                                <linearGradient key={i} id={`statusGradient${i}`} x1="0" y1="0" x2="1" y2="1">
-                                                    <stop offset="0%" stopColor={STATUS_COLORS[i]} stopOpacity={0.8}/>
-                                                    <stop offset="100%" stopColor={STATUS_COLORS[i]} stopOpacity={0.4}/>
-                                                </linearGradient>
-                                            ))}
-                                        </defs>
-                                        <Legend layout="horizontal" verticalAlign="top" align="center" wrapperStyle={{ paddingBottom: 8 }}/>
-                                        <Pie
-                                            data={statusData}
-                                            cx="50%"
-                                            cy="56%"
-                                            innerRadius={60}
-                                            outerRadius={110}
-                                            labelLine={false}
-                                            label={renderLabel}
-                                            dataKey="value"
-                                            isAnimationActive={true}
-                                            animationDuration={800}
-                                        >
-                                            {statusData.map((_, i) => (
-                                                <Cell key={i} fill={STATUS_COLORS_GRADIENT[i % STATUS_COLORS_GRADIENT.length]} />
-                                            ))}
-                                        </Pie>
-                                        <Tooltip contentStyle={{ fontSize: '14px', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.15)' }} formatter={(v: number, n: string) => [`${v} bug`, n]} />
-                                    </PieChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </div>
-
-                        {/* PRIORITY CHART */}
-                        <div className="flex flex-col" data-tour="chart-priority">
-                            <h4 className="mb-2 text-center text-lg font-medium text-gray-600">Prioritas</h4>
-                            <div className="h-[340px]">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <PieChart>
-                                        <defs>
-                                            {priorityData.map((_, i) => (
-                                                <linearGradient key={i} id={`priorityGradient${i}`} x1="0" y1="0" x2="1" y2="1">
-                                                    <stop offset="0%" stopColor={PRIORITY_COLORS[i]} stopOpacity={0.8}/>
-                                                    <stop offset="100%" stopColor={PRIORITY_COLORS[i]} stopOpacity={0.4}/>
-                                                </linearGradient>
-                                            ))}
-                                        </defs>
-                                        <Legend layout="horizontal" verticalAlign="top" align="center" wrapperStyle={{ paddingBottom: 8 }}/>
-                                        <Pie
-                                            data={priorityData}
-                                            cx="50%"
-                                            cy="56%"
-                                            innerRadius={60}
-                                            outerRadius={110}
-                                            labelLine={false}
-                                            label={renderLabel}
-                                            dataKey="value"
-                                            isAnimationActive={true}
-                                            animationDuration={800}
-                                        >
-                                            {priorityData.map((_, i) => (
-                                                <Cell key={i} fill={PRIORITY_COLORS_GRADIENT[i % PRIORITY_COLORS_GRADIENT.length]} />
-                                            ))}
-                                        </Pie>
-                                        <Tooltip contentStyle={{ fontSize: '14px', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.15)' }} formatter={(v: number, n: string) => [`${v} bug`, n]} />
-                                    </PieChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </div>
-                    </div>
+                    <Suspense fallback={<div className="p-10 text-center text-gray-500">Loading charts...</div>}>
+                        <DashboardCharts
+                            statusData={statusData}
+                            priorityData={priorityData}
+                            trendData={trendData}
+                            STATUS_COLORS={STATUS_COLORS}
+                            STATUS_COLORS_GRADIENT={STATUS_COLORS_GRADIENT}
+                            PRIORITY_COLORS={PRIORITY_COLORS}
+                            PRIORITY_COLORS_GRADIENT={PRIORITY_COLORS_GRADIENT}
+                        />
+                    </Suspense>
                 </div>
             </div>
         </AppLayout>

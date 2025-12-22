@@ -2,8 +2,9 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
 use App\Services\NotificationSenderService;
+use Illuminate\Foundation\Console\ServeCommand;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,6 +23,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        if (windows_os()) {
+            // Keep essential Windows variables when the dev server is respawned.
+            ServeCommand::$passthroughVariables = array_unique(array_merge(
+                ServeCommand::$passthroughVariables,
+                ['Path', 'SystemRoot']
+            ));
+        }
     }
 }

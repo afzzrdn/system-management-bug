@@ -1,12 +1,14 @@
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link } from '@inertiajs/react';
 import { ArrowUpRight, Bug, FolderKanban, Eye } from 'lucide-react';
-import { ReactNode, useEffect, useState } from 'react';
+import React, { ReactNode, useEffect, useState, Suspense } from 'react';
 import { Bug as BugType } from '@/types/bug';
 import { Button } from '@/components/ui/button';
 import BugDetail from '@/components/BugDetail';
 import { User } from '@/types/index';
-import { useTour } from '@/tour/TourProvider'; // ⬅️ NEW
+import { useTour } from '@/tour/TourProvider';
+
+const DashboardCharts = React.lazy(() => import('@/components/client/DashboardCharts'));
 
 interface RecentBug {
     id: number;
@@ -30,6 +32,16 @@ interface DashboardProps {
         description: string;
         icon: string;
     }>;
+    bugStatusStats: {
+        open: number;
+        in_progress: number;
+        resolved: number;
+        closed: number;
+    };
+    bugTrends: {
+        labels: string[];
+        data: number[];
+    };
 }
 
 type StatCardProps = {
@@ -54,7 +66,7 @@ const StatCard = ({ icon, title, value, iconBgColor, href, loading }: StatCardPr
     </Link>
 );
 
-export default function Dashboard({ auth, stats, recentBugs = [], devLogs = [] }: DashboardProps) {
+export default function Dashboard({ auth, stats, recentBugs = [], devLogs = [], bugStatusStats, bugTrends }: DashboardProps) {
     const [isDetailOpen, setIsDetailOpen] = useState(false);
     const [selectedBug, setSelectedBug] = useState<BugType | null>(null);
 
@@ -111,6 +123,20 @@ export default function Dashboard({ auth, stats, recentBugs = [], devLogs = [] }
         }
     };
 
+    const statusData = [
+        { name: 'Open', value: bugStatusStats?.open ?? 0 },
+        { name: 'In Progress', value: bugStatusStats?.in_progress ?? 0 },
+        { name: 'Resolved', value: bugStatusStats?.resolved ?? 0 },
+        { name: 'Closed', value: bugStatusStats?.closed ?? 0 },
+    ];
+    const STATUS_COLORS = ['#EF4444', '#F59E0B', '#10B981', '#6B7280'];
+    const STATUS_COLORS_GRADIENT = statusData.map((_, i) => `url(#statusGradient${i})`);
+
+    const trendData = (bugTrends?.labels || []).map((label, index) => ({
+        name: label,
+        count: bugTrends?.data[index] ?? 0
+    }));
+
     return (
         <AppLayout>
             <Head>
@@ -140,6 +166,16 @@ export default function Dashboard({ auth, stats, recentBugs = [], devLogs = [] }
                         <StatCard title="Jumlah Project" value={stats?.activeProjects || 0} icon={<FolderKanban size={22} />} iconBgColor="bg-blue-500" href={route('client.project')} loading={!stats} />
                     </div>
                 </div>
+
+                {/* CHARTS SECTION */}
+                <Suspense fallback={<div className="p-10 text-center text-gray-500">Loading charts...</div>}>
+                    <DashboardCharts
+                        statusData={statusData}
+                        trendData={trendData}
+                        STATUS_COLORS={STATUS_COLORS}
+                        STATUS_COLORS_GRADIENT={STATUS_COLORS_GRADIENT}
+                    />
+                </Suspense>
 
                 <div className="grid grid-cols-1 gap-7 lg:grid-cols-2">
                     <div className="rounded-2xl border border-gray-100 bg-white p-0 shadow-sm" data-tour="recent-list">

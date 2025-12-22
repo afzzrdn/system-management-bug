@@ -18,6 +18,7 @@ class BugController extends Controller
     public function index(Request $request): Response
     {
         $request->validate([
+            'search'     => 'nullable|string',
             'status'     => 'nullable|string|in:open,in_progress,resolved,closed',
             'priority'   => 'nullable|string|in:low,medium,high,critical',
             'project_id' => 'nullable|uuid|exists:projects,id',
@@ -25,6 +26,12 @@ class BugController extends Controller
         ]);
 
         $bugs = Bug::with(['project', 'reporter', 'assignee', 'attachments'])
+            ->when($request->input('search'), function ($q, $search) {
+                $q->where(function ($query) use ($search) {
+                    $query->where('title', 'like', "%{$search}%")
+                          ->orWhere('description', 'like', "%{$search}%");
+                });
+            })
             ->when($request->input('status'), fn($q, $v) => $q->where('status', $v))
             ->when($request->input('priority'), fn($q, $v) => $q->where('priority', $v))
             ->when($request->input('project_id'), fn($q, $v) => $q->where('project_id', $v))
@@ -44,7 +51,7 @@ class BugController extends Controller
             'bugs'     => $bugs,
             'projects' => Project::all(),
             'users'    => User::all(),
-            'filters'  => $request->only(['status', 'priority', 'project_id', 'type']),
+            'filters'  => $request->only(['search', 'status', 'priority', 'project_id', 'type']),
         ]);
     }
 

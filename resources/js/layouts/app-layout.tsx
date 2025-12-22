@@ -9,6 +9,7 @@ export interface User {
     role: string;
     phone: string;
     asal: string;
+    profile_photo_path?: string;
 }
 
 interface AppLayoutProps {
@@ -100,9 +101,17 @@ export default function AppLayout({ children }: AppLayoutProps) {
                         <div className={`flex items-center ${isSidebarCollapsed ? 'flex-col gap-4' : 'flex-row gap-3'}`}>
 
                             <Link href="/profile" className={`flex items-center gap-3 ${isSidebarCollapsed ? 'justify-center' : 'flex-1'} hover:bg-gray-100 p-2 rounded-md transition-colors`}>
-                                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-700 flex-shrink-0">
-                                    {user.name?.charAt(0)?.toUpperCase() ?? "U"}
-                                </div>
+                                {user.profile_photo_path ? (
+                                    <img
+                                        src={`/${user.profile_photo_path}`}
+                                        alt={user.name}
+                                        className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                                    />
+                                ) : (
+                                    <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-700 flex-shrink-0">
+                                        {user.name?.charAt(0)?.toUpperCase() ?? "U"}
+                                    </div>
+                                )}
                                 {!isSidebarCollapsed && (
                                     <div className="overflow-hidden">
                                         <p className="font-semibold text-gray-800 truncate">{user.name}</p>
