@@ -7,6 +7,7 @@ import SearchInput from '@/components/SearchInput';
 import UserDetail from '@/components/UserDetail';
 import { useTour } from '@/tour/TourProvider';
 import UserEditModal from '@/components/UserEditModal';
+import { Edit, Trash, Trash2 } from 'lucide-react';
 
 interface PageLink { url: string | null; label: string; active: boolean; }
 interface User { id: number; name: string; email: string; phone: string; asal: string; role: 'admin' | 'developer' | 'client'; }
@@ -155,15 +156,15 @@ export default function Dashboard({ users, flash, filters }: DashboardProps) {
                       <div className='flex items-center justify-end gap-x-4'>
                         <button
                           onClick={(e) => { e.stopPropagation(); handleEdit(user); }}
-                          className="text-indigo-600 hover:text-indigo-900"
+                          className="text-blue-500 hover:text-indigo-900"
                         >
-                          Edit
+                          <Edit className='w-5'/>
                         </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); handleDelete(user); }}
                           className="text-red-600 hover:text-red-900"
                         >
-                          Hapus
+                          <Trash2 className='w-5'/>
                         </button>
                       </div>
                     </td>

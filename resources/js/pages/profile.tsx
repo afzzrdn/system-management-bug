@@ -94,18 +94,18 @@ const Profile = () => {
                 <div className="p-8 bg-white border-b border-gray-100">
                     <div className="flex items-center justify-between mb-6">
                         <div>
-                            <h2 className="text-2xl font-bold text-gray-900">Profile Settings</h2>
+                            <h2 className="text-2xl font-bold text-gray-900">Profile</h2>
                             <p className="mt-1 text-sm text-gray-500">
-                                Manage your account information and security settings.
+                                Kelola informasi akun anda
                             </p>
                         </div>
                     </div>
 
-                <form onSubmit={handleProfileSubmit} className="space-y-8">
+                <form onSubmit={handleProfileSubmit} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                                Full Name
+                                Nama
                             </label>
                             <input
                                 id="name"
@@ -113,14 +113,14 @@ const Profile = () => {
                                 type="text"
                                 value={profileData.name}
                                 onChange={handleProfileChange}
-                                className="w-full h-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors"
+                                className="w-full h-10 rounded-lg border-gray-300 border focus:outline-none px-3 text-sm"
                             />
                             {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
                         </div>
 
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                                Email Address
+                                Email
                             </label>
                             <input
                                 id="email"
@@ -128,14 +128,14 @@ const Profile = () => {
                                 type="email"
                                 value={profileData.email}
                                 onChange={handleProfileChange}
-                                className="w-full h-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors"
+                                className="w-full h-10 rounded-lg border-gray-300 border focus:outline-none px-3 text-sm"
                             />
                             {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
                         </div>
 
                         <div>
                             <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                                Phone Number
+                                No HP
                             </label>
                             <input
                                 id="phone"
@@ -143,7 +143,7 @@ const Profile = () => {
                                 type="text"
                                 value={profileData.phone}
                                 onChange={handleProfileChange}
-                                className="w-full h-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors"
+                                className="w-full h-10 rounded-lg border-gray-300 border focus:outline-none px-3 text-sm"
                             />
                             {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
                         </div>
@@ -158,18 +158,18 @@ const Profile = () => {
                                 type="text"
                                 value={profileData.asal}
                                 onChange={handleProfileChange}
-                                className="w-full h-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors"
+                                className="w-full h-10 rounded-lg border-gray-300 border focus:outline-none px-3 text-sm"
                             />
                             {errors.asal && <p className="mt-1 text-sm text-red-600">{errors.asal}</p>}
                         </div>
                     </div>
 
-                    <div className="flex pt-4 border-t border-gray-100">
+                    <div className="flex">
                         <button
                             type="submit"
-                            className="inline-flex items-center px-6 py-3 bg-indigo-600 border border-transparent rounded-lg font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:border-indigo-900 focus:ring ring-indigo-300 disabled:opacity-25 transition ease-in-out duration-150 shadow-sm"
+                            className="inline-flex items-center px-6 py-3 bg-blue-500 border border-transparent rounded-lg font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:border-indigo-900 focus:ring ring-indigo-300 disabled:opacity-25 transition ease-in-out duration-150 shadow-sm"
                         >
-                            Save Changes
+                            Simpan
                         </button>
                     </div>
                 </form>
@@ -180,13 +180,13 @@ const Profile = () => {
                 <div className="p-8 items bg-white border-b border-gray-100">
                     <h2 className="text-xl font-bold text-gray-900 mb-1">Update Password</h2>
                     <p className="text-sm text-gray-500 mb-6">
-                        Ensure your account is using a long, random password to stay secure.
+                        Pastikan password anda aman
                     </p>
 
                 <form onSubmit={handlePasswordSubmit} className="space-y-6 max-w-2xl">
                     <div>
                     <label htmlFor="current_password" className="block text-sm font-medium text-gray-700 mb-1">
-                        Current Password
+                        Password Lama
                     </label>
                     <input
                         id="current_password"
@@ -194,7 +194,7 @@ const Profile = () => {
                         type="password"
                         value={passwordData.current_password}
                         onChange={handlePasswordChange}
-                        className="w-full h-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors"
+                        className="w-full h-full p-2 rounded-lg border-gray-300 border focus:outline-none"
                     />
                     {errors.current_password && (
                         <p className="mt-1 text-sm text-red-600">{errors.current_password}</p>
@@ -203,7 +203,7 @@ const Profile = () => {
 
                     <div>
                     <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                        New Password
+                        Password Baru
                     </label>
                     <input
                         id="password"
@@ -211,14 +211,14 @@ const Profile = () => {
                         type="password"
                         value={passwordData.password}
                         onChange={handlePasswordChange}
-                        className="w-full h-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors"
+                        className="w-full h-full p-2 rounded-lg border-gray-300 border focus:outline-none"
                     />
                     {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
                     </div>
 
                     <div>
                     <label htmlFor="password_confirmation" className="block text-sm font-medium text-gray-700 mb-1">
-                        Confirm Password
+                        Konfirmasi Password
                     </label>
                     <input
                         id="password_confirmation"
@@ -226,7 +226,7 @@ const Profile = () => {
                         type="password"
                         value={passwordData.password_confirmation}
                         onChange={handlePasswordChange}
-                        className="w-full h-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors"
+                        className="w-full h-full p-2 rounded-lg border-gray-300 border focus:outline-none"
                     />
                     {errors.password_confirmation && (
                         <p className="mt-1 text-sm text-red-600">{errors.password_confirmation}</p>
@@ -236,7 +236,7 @@ const Profile = () => {
                     <div className="flex pt-4 border-t border-gray-100">
                     <button
                         type="submit"
-                        className="inline-flex items-center px-6 py-3 bg-gray-800 border border-transparent rounded-lg font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 active:bg-gray-900 focus:outline-none focus:border-gray-900 focus:ring ring-gray-300 disabled:opacity-25 transition ease-in-out duration-150 shadow-sm"
+                        className="inline-flex items-center px-6 py-3 bg-blue-500 border border-transparent rounded-lg font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 active:bg-gray-900 focus:outline-none focus:border-gray-900 focus:ring ring-gray-300 disabled:opacity-25 transition ease-in-out duration-150 shadow-sm"
                     >
                         Update Password
                     </button>

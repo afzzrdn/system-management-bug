@@ -5,6 +5,7 @@ import BugFormModal from '@/components/BugFormModal';
 import { Listbox, Transition } from '@headlessui/react';
 import { useTour } from '@/tour/TourProvider';
 import { debounce } from 'lodash';
+import { Search } from 'lucide-react';
 
 type Project = { id: number | string; name: string };
 type User = { id: number | string; name: string; role: 'developer' | 'client' | 'admin' };
@@ -189,14 +190,15 @@ export default function Bugs() {
         </div>
 
         <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-          <div className="mb-6">
+          <div className="mb-6 flex border border-gray-400 rounded-xl w-150 items-center justify-between px-5 py-2">
             <input
               type="text"
               placeholder="Cari judul atau deskripsi bug..."
               value={searchTerm}
               onChange={handleSearchChange}
-              className="w-full rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              className="w-100 rounded-lg focus:outline-none"
             />
+            <Search className='text-gray-400'/>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-6 items-end">
             <div className="lg:col-span-2" data-tour="filters-status">

@@ -53,7 +53,7 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, onClose }) => {
                 <div className="p-6">
                     <div className="flex justify-between items-center pb-4 border-b">
                         <h3 className="text-xl font-semibold text-gray-800">Edit Pengguna: {user.name}</h3>
-                        <button onClick={onClose} className="text-gray-400 hover:text-gray-600">&times;</button>
+                        <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-3xl">&times;</button>
                     </div>
 
                     <form onSubmit={handleSubmit} className="mt-6 space-y-4">
@@ -63,7 +63,7 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, onClose }) => {
                             <input
                                 id="name" type="text" value={data.name}
                                 onChange={(e) => setData('name', e.target.value)}
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                className="mt-1 p-2 block w-full rounded-md border border-gray-400 "
                             />
                             {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
                         </div>
@@ -74,7 +74,7 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, onClose }) => {
                             <input
                                 id="email" type="email" value={data.email}
                                 onChange={(e) => setData('email', e.target.value)}
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                className="mt-1 p-2 block w-full rounded-md border border-gray-400 "
                             />
                             {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
                         </div>
@@ -85,7 +85,7 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, onClose }) => {
                             <input
                                 id="phone" type="text" value={data.phone}
                                 onChange={(e) => setData('phone', e.target.value)}
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                className="mt-1 p-2 block w-full rounded-md border border-gray-400 "
                             />
                             {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
                         </div>
@@ -96,7 +96,7 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, onClose }) => {
                             <input
                                 id="asal" type="text" value={data.asal}
                                 onChange={(e) => setData('asal', e.target.value)}
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                className="mt-1 p-2 block w-full rounded-md border border-gray-400 "
                             />
                             {errors.asal && <p className="text-xs text-red-500 mt-1">{errors.asal}</p>}
                         </div>
@@ -108,7 +108,7 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, onClose }) => {
                                 id="role"
                                 value={data.role}
                                 onChange={(e) => setData('role', e.target.value as 'admin' | 'developer' | 'client')}
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                className="mt-1 p-2 block w-full rounded-md border border-gray-400 "
                             >
                                 <option value="admin">Admin</option>
                                 <option value="developer">Developer</option>
@@ -129,7 +129,7 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, onClose }) => {
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+                                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-500 hover:bg-indigo-700 disabled:opacity-50"
                             >
                                 {processing ? 'Menyimpan...' : 'Simpan Perubahan'}
                             </button>

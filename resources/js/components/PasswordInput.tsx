@@ -1,5 +1,6 @@
 import { EyeClosed, Eye } from 'lucide-react';
 import React, { useState } from 'react';
+import { IoEyeOffOutline } from "react-icons/io5";
 
 
 interface PasswordInputProps {
@@ -33,6 +34,7 @@ export default function PasswordInput({
                     value={value}
                     onChange={onChange}
                     required={required}
+                    placeholder='Masukkan Password'
                     className={`${baseClasses} pr-10 ${error ? errorClasses : ''} ${className}`}
                 />
                 <button
@@ -45,7 +47,7 @@ export default function PasswordInput({
                     {showPassword ? (
                         <Eye  className="w-5 h-5"/>
                     ) : (
-                        <EyeClosed className="w-5 h-5" />
+                        <IoEyeOffOutline className="w-5 h-5" />
                     )}
                 </button>
             </div>
