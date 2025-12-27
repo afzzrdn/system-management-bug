@@ -19,13 +19,14 @@ class BugController extends Controller
     {
         $request->validate([
             'search'     => 'nullable|string',
-            'status'     => 'nullable|string|in:open,in_progress,resolved,closed',
+            'status'     => 'nullable|string|in:pending,open,in_progress,resolved,closed',
             'priority'   => 'nullable|string|in:low,medium,high,critical',
             'project_id' => 'nullable|uuid|exists:projects,id',
             'type'       => 'nullable|string|in:Tampilan,Performa,Fitur,Keamanan,Error,Lainnya',
         ]);
 
-        $bugs = Bug::with(['project', 'reporter', 'assignee', 'attachments'])
+        $approvedBugs = Bug::with(['project', 'reporter', 'assignee', 'attachments'])
+            ->where('is_approved', true)
             ->when($request->input('search'), function ($q, $search) {
                 $q->where(function ($query) use ($search) {
                     $query->where('title', 'like', "%{$search}%")
@@ -39,7 +40,7 @@ class BugController extends Controller
             ->latest()
             ->get();
 
-        $bugs = $bugs->map(function ($bug) {
+        $approvedBugs = $approvedBugs->map(function ($bug) {
             $bugArray = $bug->toArray();
             $bugArray['attachments'] = $bug->attachments->map(function ($att) {
                 return asset('storage/' . $att->file_path);
@@ -47,11 +48,17 @@ class BugController extends Controller
             return $bugArray;
         });
 
+        $pendingBugs = Bug::with(['project', 'reporter'])
+            ->where('is_approved', false)
+            ->latest()
+            ->get();
+
         return Inertia::render('admin/bugs', [
-            'bugs'     => $bugs,
-            'projects' => Project::all(),
-            'users'    => User::all(),
-            'filters'  => $request->only(['search', 'status', 'priority', 'project_id', 'type']),
+            'bugs'         => $approvedBugs,
+            'pendingBugs'  => $pendingBugs,
+            'projects'     => Project::all(),
+            'users'        => User::all(),
+            'filters'      => $request->only(['search', 'status', 'priority', 'project_id', 'type']),
         ]);
     }
 
@@ -61,7 +68,7 @@ class BugController extends Controller
             'title'             => 'required|string|max:255',
             'description'       => 'nullable|string',
             'priority'          => 'required|in:low,medium,high,critical',
-            'status'            => 'required|in:open,in_progress,resolved,closed',
+            'status'            => 'required|in:pending,open,in_progress,resolved,closed',
             'type'              => 'required|in:Tampilan,Performa,Fitur,Keamanan,Error,Lainnya',
             'project_id'        => 'required|exists:projects,id',
             'assigned_to'       => 'nullable|exists:users,id',
@@ -72,6 +79,13 @@ class BugController extends Controller
         ]);
 
         $data['reported_by'] = Auth::id();
+        $data['is_approved'] = true;
+        $data['approved_at'] = now();
+        $data['approved_by'] = Auth::id();
+        if ($data['status'] === 'pending') {
+            $data['status'] = 'open';
+        }
+
         $bug = Bug::create($data);
 
         if ($request->hasFile('attachments')) {
@@ -114,7 +128,7 @@ class BugController extends Controller
             'title'             => 'required|string|max:255',
             'description'       => 'nullable|string',
             'priority'          => 'required|in:low,medium,high,critical',
-            'status'            => 'required|in:open,in_progress,resolved,closed',
+            'status'            => 'required|in:pending,open,in_progress,resolved,closed',
             'type'              => 'required|in:Tampilan,Performa,Fitur,Keamanan,Error,Lainnya',
             'project_id'        => 'required|exists:projects,id',
             'assigned_to'       => 'nullable|exists:users,id',
@@ -129,6 +143,13 @@ class BugController extends Controller
         $oldAssignee = $bug->assigned_to;
 
         $bug->update($data);
+        if (!$bug->is_approved) {
+            $bug->forceFill([
+                'is_approved' => true,
+                'approved_at' => now(),
+                'approved_by' => Auth::id(),
+            ])->save();
+        }
 
         if ($request->hasFile('attachments')) {
             foreach ($bug->attachments as $attachment) {
@@ -170,5 +191,47 @@ class BugController extends Controller
         }
 
         return redirect()->route('bugs.index')->with('success', 'Bug updated successfully.');
+    }
+
+    public function approve(Bug $bug, NotificationSenderService $sender)
+    {
+        $bug->forceFill([
+            'is_approved' => true,
+            'approved_at' => now(),
+            'approved_by' => Auth::id(),
+            'status'      => $bug->status === 'pending' ? 'open' : $bug->status,
+        ])->save();
+
+        $bug->load(['reporter','project']);
+
+        if ($bug->reporter) {
+            $sender->sendToUser(
+                $bug->reporter,
+                'Bug Disetujui',
+                "Bug {$bug->ticket_number} - \"{$bug->title}\" telah disetujui admin dan akan diproses oleh tim kami."
+            );
+        }
+
+        if ($bug->assigned_to && $bug->assignee) {
+            $sender->sendToUser(
+                $bug->assignee,
+                'Bug Baru Siap Dikerjakan',
+                "Bug {$bug->ticket_number} - \"{$bug->title}\" telah disetujui dan siap dikerjakan."
+            );
+        }
+
+        return redirect()->back()->with('success', 'Bug disetujui.');
+    }
+
+    public function reject(Bug $bug)
+    {
+        $bug->forceFill([
+            'is_approved' => false,
+            'status'      => 'closed',
+            'approved_at' => null,
+            'approved_by' => null,
+        ])->save();
+
+        return redirect()->back()->with('success', 'Bug ditandai sebagai ditolak.');
     }
 }

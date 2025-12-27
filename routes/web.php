@@ -98,6 +98,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     ])->parameters([
         'bugs' => 'bug',
     ]);
+
+    Route::post('bugs/{bug}/approve', [AdminBugController::class, 'approve'])->name('bugs.approve');
+    Route::post('bugs/{bug}/reject', [AdminBugController::class, 'reject'])->name('bugs.reject');
     Route::resource('project', ProjectController::class)->names([
         'index' => 'projects.index',
         'store' => 'projects.store',

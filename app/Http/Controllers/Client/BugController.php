@@ -82,10 +82,11 @@ class BugController extends Controller
         ]);
 
         $validated['reported_by'] = Auth::id();
-        $validated['status']      = 'open';
+        $validated['status']      = 'pending';
         $validated['priority']    = 'low';
-        $validated['assigned_to'] = $request->filled('assigned_to') ? $request->assigned_to : null;
+        $validated['assigned_to'] = null;
         $validated['type']        = BugType::Lainnya->value;
+        $validated['is_approved'] = false;
 
         $bug = Bug::create($validated);
 
@@ -104,14 +105,14 @@ class BugController extends Controller
             $sender->sendToUser(
                 $bug->assignee,
                 'Penugasan Bug Baru',
-                "Anda telah ditugaskan untuk menangani bug: \"{$bug->title}\". Silakan tinjau dan tangani sesuai prioritas yang ditentukan."
+                "Anda telah ditugaskan untuk menangani bug: {$bug->ticket_number} - \"{$bug->title}\". Silakan tinjau dan tangani sesuai prioritas yang ditentukan."
             );
         }
 
         $sender->sendToUser(
             $bug->reporter,
             'Laporan Bug Telah Dikirim',
-            "Laporan bug \"{$bug->title}\" Anda telah berhasil dikirim dan saat ini sedang ditindaklanjuti oleh tim pengembang."
+            "Laporan bug {$bug->ticket_number} - \"{$bug->title}\" Anda telah berhasil dikirim dan saat ini menunggu persetujuan admin."
         );
 
         $adminUsers = User::where('role', 'admin')->get();
@@ -119,11 +120,11 @@ class BugController extends Controller
             $sender->sendToUser(
                 $admin,
                 'Bug Baru dari Client',
-                "Client {$bug->reporter->name} melaporkan bug: \"{$bug->title}\". Silakan distribusikan ke developer."
+                "Client {$bug->reporter->name} melaporkan bug {$bug->ticket_number} - \"{$bug->title}\". Silakan review dan setujui sebelum didistribusikan ke developer."
             );
         }
 
         return redirect()->route('client.bugs.index')
-            ->with('success', 'Bug berhasil dilaporkan.');
+            ->with('success', 'Bug berhasil dilaporkan dan menunggu persetujuan admin.');
     }
 }

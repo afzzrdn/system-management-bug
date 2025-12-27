@@ -10,12 +10,13 @@ import { Search } from 'lucide-react';
 type Project = { id: number | string; name: string };
 type User = { id: number | string; name: string; role: 'developer' | 'client' | 'admin' };
 type Bug = {
+  ticket_number: string;
   attachments: string[];
   id: string;
   title: string;
   description: string;
   priority: 'low' | 'medium' | 'high' | 'critical';
-  status: 'open' | 'in_progress' | 'resolved' | 'closed';
+  status: 'pending' | 'open' | 'in_progress' | 'resolved' | 'closed';
   type: 'Tampilan' | 'Performa' | 'Fitur' | 'Keamanan' | 'Error' | 'Lainnya';
   project_id: string;
   reported_by: string;
@@ -28,8 +29,19 @@ type Bug = {
   assignee?: User;
 };
 
+type PendingBug = {
+  id: string;
+  ticket_number: string;
+  title: string;
+  description: string | null;
+  project?: Project | null;
+  reporter?: User | null;
+  status: 'pending';
+};
+
 type PageProps = {
   bugs: Bug[];
+  pendingBugs: PendingBug[];
   projects: Project[];
   users: User[];
   filters?: { search?: string; status?: string; project_id?: string; priority?: string; type?: string };
@@ -39,7 +51,7 @@ type BugFormData = {
   title: string;
   description: string;
   priority: 'low' | 'medium' | 'high' | 'critical';
-  status: 'open' | 'in_progress' | 'resolved' | 'closed';
+  status: 'pending' | 'open' | 'in_progress' | 'resolved' | 'closed';
   type: 'Tampilan' | 'Performa' | 'Fitur' | 'Keamanan' | 'Error' | 'Lainnya' | '';
   attachments: (File | string | null)[];
   project_id: string | number;
@@ -50,7 +62,7 @@ type BugFormData = {
 };
 
 export default function Bugs() {
-  const { bugs, projects, users, filters: initialFilters = {} } = usePage<PageProps>().props;
+  const { bugs, pendingBugs = [], projects, users, filters: initialFilters = {} } = usePage<PageProps>().props;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBug, setEditingBug] = useState<Bug | null>(null);
   const [filters, setFilters] = useState({ search: initialFilters.search || '', status: initialFilters.status || '', project_id: initialFilters.project_id || '', priority: initialFilters.priority || '', type: initialFilters.type || '' });
@@ -74,7 +86,7 @@ export default function Bugs() {
     title: '',
     description: '',
     priority: 'low',
-    status: 'open',
+    status: 'pending',
     type: '',
     attachments: [],
     project_id: '',
@@ -88,7 +100,13 @@ export default function Bugs() {
   const isEditing = editingBug !== null;
 
   const priorityClasses = { low: 'bg-blue-100 text-blue-800 ring-1 ring-inset ring-blue-200', medium: 'bg-yellow-100 text-yellow-800 ring-1 ring-inset ring-yellow-200', high: 'bg-orange-100 text-orange-800 ring-1 ring-inset ring-orange-200', critical: 'bg-red-100 text-red-800 ring-1 ring-inset ring-red-200' };
-  const statusInfo = { open: { text: 'Open', class: 'text-blue-600 bg-blue-100' }, in_progress: { text: 'In Progress', class: 'text-yellow-600 bg-yellow-100' }, resolved: { text: 'Resolved', class: 'text-green-600 bg-green-100' }, closed: { text: 'Closed', class: 'text-slate-700 bg-slate-100' } };
+  const statusInfo = {
+    pending: { text: 'Pending', class: 'text-amber-700 bg-amber-100' },
+    open: { text: 'Open', class: 'text-blue-600 bg-blue-100' },
+    in_progress: { text: 'In Progress', class: 'text-yellow-600 bg-yellow-100' },
+    resolved: { text: 'Resolved', class: 'text-green-600 bg-green-100' },
+    closed: { text: 'Closed', class: 'text-slate-700 bg-slate-100' },
+  };
   const bugTypes = ['Tampilan', 'Performa', 'Fitur', 'Keamanan', 'Error', 'Lainnya'];
 
   useEffect(() => {
@@ -142,6 +160,16 @@ export default function Bugs() {
 
   const handleDelete = (id: string) => {
     if (confirm('Yakin ingin menghapus bug ini?')) router.delete(route('bugs.destroy', id));
+  };
+
+  const handleApprove = (bugId: string) => {
+    router.post(route('bugs.approve', bugId), {}, { preserveScroll: true });
+  };
+
+  const handleReject = (bugId: string) => {
+    if (confirm('Tolak bug ini?')) {
+      router.post(route('bugs.reject', bugId), {}, { preserveScroll: true });
+    }
   };
 
   const isImageUrl = (url: string) => /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(url);
@@ -265,6 +293,37 @@ export default function Bugs() {
           )}
         </div>
 
+        {pendingBugs.length > 0 && (
+          <div className="bg-white p-5 rounded-xl shadow-sm border border-amber-200">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-lg font-semibold text-amber-800">Menunggu Persetujuan</h2>
+                <p className="text-sm text-amber-700/80">Bug dari client akan tampil di sini sebelum disetujui.</p>
+              </div>
+              <span className="px-3 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800">{pendingBugs.length} tiket</span>
+            </div>
+            <div className="space-y-3">
+              {pendingBugs.map(pb => (
+                <div key={pb.id} className="border border-amber-100 rounded-lg p-4 flex flex-col gap-2 bg-amber-50/40">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex flex-col">
+                      <span className="text-xs font-semibold text-amber-700">{pb.ticket_number}</span>
+                      <span className="text-base font-semibold text-slate-900">{pb.title}</span>
+                      <span className="text-sm text-slate-600">{pb.project?.name ?? 'Tanpa project'}</span>
+                    </div>
+                    <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${statusInfo.pending.class}`}>{statusInfo.pending.text}</span>
+                  </div>
+                  <div className="text-sm text-slate-600">Pelapor: <span className="font-medium text-slate-800">{pb.reporter?.name ?? 'Tidak diketahui'}</span></div>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => handleApprove(pb.id)} className="px-3 py-1.5 text-sm font-semibold rounded-md bg-emerald-600 text-white hover:bg-emerald-700">Setujui</button>
+                    <button onClick={() => handleReject(pb.id)} className="px-3 py-1.5 text-sm font-semibold rounded-md bg-red-600 text-white hover:bg-red-700">Tolak</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6" data-tour="bug-grid">
           {bugs.length > 0 ? (
             bugs.map((bug, idx) => (
@@ -273,6 +332,7 @@ export default function Bugs() {
                   <div className="flex justify-between items-start gap-4">
                     <h3 className="text-lg font-bold text-slate-800 pr-2">{bug.title}</h3>
                     <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-700">{bug.ticket_number}</span>
                       <span className={`px-2.5 py-1 text-xs font-semibold rounded-full capitalize whitespace-nowrap ${priorityClasses[bug.priority]}`}>{bug.priority}</span>
                       <span className="px-2.5 py-1 text-xs font-semibold rounded-full whitespace-nowrap bg-slate-100 text-slate-700">{bug.type}</span>
                     </div>

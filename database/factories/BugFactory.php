@@ -30,13 +30,13 @@ class BugFactory extends Factory
     {
         $reportedBy = User::factory()->create(['role' => 'client']);
         $project = Project::factory()->create(['client_id' => $reportedBy->id]);
-        
+
         return [
             'id' => (string) Str::uuid(),
             'title' => fake()->sentence(6),
             'description' => fake()->paragraph(),
             'priority' => fake()->randomElement(['low', 'medium', 'high', 'critical']),
-            'status' => fake()->randomElement(['open', 'in_progress', 'resolved', 'closed']),
+            'status' => 'pending',
             'type' => fake()->randomElement(array_column(BugType::cases(), 'value')),
             'project_id' => $project->id,
             'reported_by' => $reportedBy->id,
@@ -44,6 +44,9 @@ class BugFactory extends Factory
             'schedule_start_at' => null,
             'due_at' => fake()->dateTimeBetween('now', '+30 days'),
             'resolved_at' => null,
+            'is_approved' => false,
+            'approved_at' => null,
+            'approved_by' => null,
             'created_at' => fake()->dateTimeBetween('-30 days', 'now'),
             'updated_at' => now(),
         ];
@@ -67,6 +70,8 @@ class BugFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'status' => 'resolved',
             'resolved_at' => fake()->dateTimeBetween('-7 days', 'now'),
+            'is_approved' => true,
+            'approved_at' => now()->subDay(),
         ]);
     }
 
@@ -79,6 +84,19 @@ class BugFactory extends Factory
             'status' => 'in_progress',
             'schedule_start_at' => fake()->dateTimeBetween('-7 days', 'now'),
             'assigned_to' => User::factory()->create(['role' => 'developer'])->id,
+            'is_approved' => true,
+            'approved_at' => now()->subHours(12),
+        ]);
+    }
+
+    /** Indicate bug is approved/open. */
+    public function approved(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'open',
+            'is_approved' => true,
+            'approved_at' => now(),
+            'approved_by' => User::factory()->create(['role' => 'admin'])->id,
         ]);
     }
 }

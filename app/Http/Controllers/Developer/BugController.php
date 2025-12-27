@@ -14,11 +14,15 @@ class BugController extends Controller
     public function index()
     {
         $developerId = Auth::id();
-        $bugs = Bug::with(['project', 'reporter', 'attachments'])->where('assigned_to', $developerId)->latest()->get();
+        $bugs = Bug::with(['project', 'reporter', 'attachments'])
+            ->where('assigned_to', $developerId)
+            ->where('is_approved', true)
+            ->latest()
+            ->get();
         $stats = [
-            'assigned' => Bug::where('assigned_to', $developerId)->where('status', 'open')->count(),
-            'in_progress' => Bug::where('assigned_to', $developerId)->where('status', 'in_progress')->count(),
-            'resolved' => Bug::where('assigned_to', $developerId)->where('status', 'resolved')->count(),
+            'assigned' => Bug::where('assigned_to', $developerId)->where('is_approved', true)->where('status', 'open')->count(),
+            'in_progress' => Bug::where('assigned_to', $developerId)->where('is_approved', true)->where('status', 'in_progress')->count(),
+            'resolved' => Bug::where('assigned_to', $developerId)->where('is_approved', true)->where('status', 'resolved')->count(),
         ];
         return inertia('developer/bugs', [
             'bugs' => $bugs,
@@ -89,6 +93,7 @@ class BugController extends Controller
     $devId = Auth::id();
     $bugs = \App\Models\Bug::with(['project:id,name'])
         ->where('assigned_to', $devId)
+        ->where('is_approved', true)
         ->orderBy('priority','desc')
         ->get(['id','title','status','priority','project_id']);
 

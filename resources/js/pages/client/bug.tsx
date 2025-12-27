@@ -10,10 +10,10 @@ import { useInfiniteScroll } from '@/hooks/use-infinite-scroll';
 
 type Project = { id: number; name: string; };
 type User = { id: number; name: string; role: 'developer' | 'client' | 'admin'; };
-type PageProps = { 
-  bugs: Bug[]; 
-  projects: Project[]; 
-  users: User[]; 
+type PageProps = {
+  bugs: Bug[];
+  projects: Project[];
+  users: User[];
   pagination?: {
     current_page: number;
     has_more: boolean;
@@ -25,26 +25,34 @@ export type BugFormData = {
   title: string;
   description: string;
   priority: 'low' | 'medium' | 'high' | 'critical';
-  status: 'open' | 'in_progress' | 'resolved' | 'closed';
+  status: 'pending' | 'open' | 'in_progress' | 'resolved' | 'closed';
   attachments: File[];
   project_id: string;
   assigned_to: string;
 };
 
-type StatusOpt = 'all' | 'open' | 'in_progress' | 'resolved' | 'closed';
+type ClientBug = Bug & { ticket_number?: string; created_at?: string; is_approved?: boolean };
+
+type StatusOpt = 'all' | 'pending' | 'open' | 'in_progress' | 'resolved' | 'closed';
 
 export default function Bugs() {
   const { bugs: initialBugs = [], projects = [], users = [], pagination } = usePage<PageProps>().props;
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingBug, setEditingBug] = useState<Bug | null>(null);
-  const [detailBug, setDetailBug] = useState<Bug | null>(null);
+  const [editingBug, setEditingBug] = useState<ClientBug | null>(null);
+  const [detailBug, setDetailBug] = useState<ClientBug | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [status, setStatus] = useState<StatusOpt>('all');
   const [projectId, setProjectId] = useState<string>('');
   const [assigneeId, setAssigneeId] = useState<string>('');
   const [search, setSearch] = useState<string>('');
+  const [nowTs, setNowTs] = useState(() => Date.now());
   const { start } = useTour(); // ⬅️ NEW
+
+  useEffect(() => {
+    const interval = setInterval(() => setNowTs(Date.now()), 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Initialize infinite scroll with proper endpoint
   const {
@@ -71,16 +79,51 @@ export default function Bugs() {
     }
   }, [status, projectId, assigneeId, search, initialBugs, resetData]);
 
-  const initialFormValues: BugFormData = { title: '', description: '', priority: 'low', status: 'open', attachments: [], project_id: '', assigned_to: '' };
+  const initialFormValues: BugFormData = { title: '', description: '', priority: 'low', status: 'pending', attachments: [], project_id: '', assigned_to: '' };
   const { data, setData, post, processing, errors, reset, transform } = useForm(initialFormValues);
   const isEditing = editingBug !== null;
 
   const statusInfo = {
+    pending: { text: 'Pending', class: 'bg-amber-50 text-amber-700 ring-1 ring-amber-100' },
     open: { text: 'Open', class: 'bg-blue-50 text-blue-700 ring-1 ring-blue-100' },
     in_progress: { text: 'In Progress', class: 'bg-amber-50 text-amber-700 ring-1 ring-amber-100' },
     resolved: { text: 'Resolved', class: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100' },
     closed: { text: 'Closed', class: 'bg-gray-50 text-gray-700 ring-1 ring-gray-200' },
   } as const;
+
+  const getStatusMeta = (status?: string) => statusInfo[status as keyof typeof statusInfo] ?? statusInfo.pending;
+
+  const expiryFromCreated = (createdAt?: string | null) => {
+    if (!createdAt) return null;
+    const created = new Date(createdAt);
+    if (Number.isNaN(created.getTime())) return null;
+    return new Date(created.getTime() + 72 * 60 * 60 * 1000);
+  };
+
+  const formatDateTime = (date?: Date | null) => {
+    if (!date) return '-';
+    return date.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+  };
+
+  const formatRemaining = (ms: number) => {
+    if (ms <= 0) return '00:00';
+    const totalMinutes = Math.floor(ms / 60000);
+    const hours = Math.floor(totalMinutes / 60).toString().padStart(2, '0');
+    const minutes = (totalMinutes % 60).toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+  };
+
+  const approvalLabel = (bug: ClientBug) => {
+    const expiry = expiryFromCreated(bug.created_at);
+    const remaining = expiry ? expiry.getTime() - nowTs : null;
+
+    if (bug.status === 'pending') {
+        if (remaining !== null && remaining > 0) return `Menunggu (${formatRemaining(remaining)})`;
+        return 'Belum ditanggapi';
+    }
+
+    return bug.is_approved ? 'Sudah diterima' : 'Belum ditanggapi';
+  };
 
   const openAddModal = () => { setEditingBug(null); reset(); setIsModalOpen(true); };
 
@@ -89,17 +132,17 @@ export default function Bugs() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const onFinish = () => closeModal();
-    transform(d => ({ ...d, description: d.description || '-', priority: d.priority || 'low', status: d.status || 'open', assigned_to: d.assigned_to || '', ...(isEditing ? { _method: 'put' } : {}) }));
+    transform(d => ({ ...d, description: d.description || '-', priority: d.priority || 'low', status: d.status || 'pending', assigned_to: d.assigned_to || '', ...(isEditing ? { _method: 'put' } : {}) }));
     if (isEditing && editingBug) post(route('client.bugs.update', editingBug.id), { onSuccess: onFinish, forceFormData: true });
     else post(route('client.bugs.store'), { onSuccess: onFinish, forceFormData: true });
   };
 
   const handleDelete = (id: number) => { if (confirm('Yakin ingin menghapus bug ini?')) router.delete(route('bugs.destroy', id), { preserveScroll: true }); };
 
-  const handleViewDetail = (bug: Bug) => { setDetailBug(bug); setIsDetailOpen(true); };
+  const handleViewDetail = (bug: ClientBug) => { setDetailBug(bug); setIsDetailOpen(true); };
 
   const filteredBugs = useMemo(() => {
-    return bugs.filter(b => {
+    return (bugs as ClientBug[]).filter(b => {
       if (status !== 'all' && b.status !== status) return false;
       if (projectId && b.project?.id?.toString() !== projectId) return false;
       if (assigneeId && b.assignee?.id?.toString() !== assigneeId) return false;
@@ -168,6 +211,7 @@ export default function Bugs() {
                     <label className="mb-1 block text-xs font-semibold text-slate-600">Status</label>
                     <select value={status} onChange={e => setStatus(e.target.value as StatusOpt)} className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-indigo-300">
                       <option value="all">Semua</option>
+                      <option value="pending">Pending</option>
                       <option value="open">Open</option>
                       <option value="in_progress">In Progress</option>
                       <option value="resolved">Resolved</option>
@@ -218,10 +262,22 @@ export default function Bugs() {
                   <div key={bug.id} className="p-4 hover:bg-gray-50/70 transition">
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0">
-                        <p className="truncate text-base font-semibold text-slate-900">{bug.title}</p>
+                        <p className="truncate text-base font-semibold text-slate-900 flex items-center gap-2">
+                          <span className="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700">{bug.ticket_number ?? '-'}</span>
+                          <span className="truncate">{bug.title}</span>
+                        </p>
                         <p className="mt-0.5 text-xs text-slate-500">Project: {bug.project?.name ?? 'N/A'}</p>
+                        <p className="mt-0.5 text-xs font-semibold text-slate-700">Kedaluwarsa: <span className="font-normal text-slate-600">{approvalLabel(bug)}</span></p>
                       </div>
-                      <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${statusInfo[bug.status].class}`}>{statusInfo[bug.status].text}</span>
+                      <div className="flex flex-col items-end gap-1 text-right">
+                        {(() => {
+                          const meta = getStatusMeta(bug.status);
+                          return (
+                            <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${meta.class}`}>{meta.text}</span>
+                          );
+                        })()}
+                        <span className="text-[11px] text-slate-500">{approvalLabel(bug)}</span>
+                      </div>
                     </div>
                     <div className="mt-3 flex flex-wrap items-center gap-2">
                       <button onClick={() => handleViewDetail(bug)} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-gray-50">
@@ -238,7 +294,7 @@ export default function Bugs() {
                   <p className="mt-1 text-sm text-slate-500">Coba ubah filter atau tambah bug baru.</p>
                 </div>
               )}
-              
+
               {/* Mobile infinite scroll loading indicator */}
               {(status === 'all' && !projectId && !assigneeId && !search && filteredBugs.length > 0) && (
                 <div className="flex justify-center py-4">
@@ -266,19 +322,21 @@ export default function Bugs() {
             <div className="hidden md:block">
               <div className="px-5 py-4">
                 <div className="overflow-hidden rounded-xl ring-1 ring-gray-200">
-                  <table className="w-full table-fixed text-sm">
+                    <table className="w-full table-fixed text-sm">
                     <colgroup>
-                        <col className="w-[35%]" />
-                        <col className="w-[20%]" />
-                        <col className="w-[20%]" />
-                        <col className="w-[15%]" />
-                        <col className="w-[20%]" />
+                        <col className="w-[30%]" />
+                        <col className="w-[18%]" />
+                        <col className="w-[16%]" />
+                        <col className="w-[16%]" />
+                        <col className="w-[12%]" />
+                        <col className="w-[18%]" />
                     </colgroup>
                     <thead className="bg-gray-50 text-slate-600">
                         <tr className="text-xs uppercase tracking-wide">
                         <th className="px-5 py-3 text-left font-medium">Judul</th>
                         <th className="px-5 py-3 text-left font-medium">Project</th>
                         <th className="px-5 py-3 text-left font-medium">Ditugaskan ke</th>
+                        <th className="px-5 py-3 text-left font-medium">Kedaluwarsa</th>
                         <th className="px-5 py-3 text-left font-medium">Status</th>
                         <th className="px-5 py-3 text-right font-medium"></th>
                         </tr>
@@ -286,7 +344,12 @@ export default function Bugs() {
                     <tbody className="divide-y divide-gray-100">
                         {filteredBugs.map((bug, idx) => (
                         <tr key={bug.id} className="hover:bg-gray-50">
-                            <td className="px-5 py-4">{bug.title}</td>
+                            <td className="px-5 py-4">
+                              <div className="flex items-center gap-2">
+                                <span className="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700">{bug.ticket_number ?? '-'}</span>
+                                <span>{bug.title}</span>
+                              </div>
+                            </td>
                             <td className="px-5 py-4">{bug.project?.name ?? 'N/A'}</td>
                             <td className="px-5 py-4">
                                 {bug.assignee?.name ? (
@@ -295,10 +358,19 @@ export default function Bugs() {
                                 <span className="text-slate-400 italic">Belum ada</span>
                                 )}
                             </td>
+                            <td className="px-5 py-4 text-sm text-slate-700">{approvalLabel(bug)}</td>
                             <td className="px-5 py-4">
-                            <span className={`inline-flex items-center rounded-md px-2.5 py-1.5 text-xs font-medium ${statusInfo[bug.status].class}`}>
-                                {statusInfo[bug.status].text}
-                            </span>
+                            <div className="flex flex-col gap-1">
+                              {(() => {
+                                const meta = getStatusMeta(bug.status);
+                                return (
+                                  <span className={`inline-flex w-fit items-center rounded-md px-2.5 py-1.5 text-xs font-medium ${meta.class}`}>
+                                    {meta.text}
+                                  </span>
+                                );
+                              })()}
+                              <span className="text-xs text-slate-500">{approvalLabel(bug)}</span>
+                            </div>
                             </td>
                             <td className="px-5 py-4 text-right">
                             <div className="inline-flex gap-2">
@@ -320,7 +392,7 @@ export default function Bugs() {
               </div>
             </div>
           </div>
-          
+
           {/* Infinite scroll loading indicator */}
           {(status === 'all' && !projectId && !assigneeId && !search) && (
             <div className="flex justify-center py-6">
