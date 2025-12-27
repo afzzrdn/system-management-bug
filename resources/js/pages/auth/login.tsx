@@ -36,7 +36,7 @@ export default function Login() {
                                     required
                                     value={data.email}
                                     onChange={(e) => setData('email', e.target.value)}
-                                    className="h-10 mt-1"
+                                    className="h-10 mt-1 focus:outline-none"
                                 />
                                 {errors.email && <p className="text-red-500 mt-2 text-sm">{errors.email}</p>}
                             </div>
@@ -48,7 +48,7 @@ export default function Login() {
                                     value={data.password}
                                     onChange={(e) => setData('password', e.target.value)}
                                     error={errors.password}
-                                    className="h-10 mt-1"
+                                    className="h-10 mt-1 focus:outline-none"
                                 />
                             </div>
                             <div className="text-right">

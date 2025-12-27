@@ -180,7 +180,7 @@ export default function Dashboard({ auth, stats, recentBugs = [], devLogs = [], 
                 <div className="grid grid-cols-1 gap-7 lg:grid-cols-2">
                     <div className="rounded-2xl border border-gray-100 bg-white p-0 shadow-sm" data-tour="recent-list">
                         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white/80 p-6 backdrop-blur">
-                            <h4 className="text-xl font-semibold text-gray-900">Recent Bug Reports</h4>
+                            <h4 className="text-xl font-semibold text-gray-900">Laporan Bug Terbaru</h4>
                             <Link
                                 data-tour="view-all"
                                 href={route('client.bugs.index')}
@@ -194,8 +194,8 @@ export default function Dashboard({ auth, stats, recentBugs = [], devLogs = [], 
                                 <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
                                     <FolderKanban className="h-6 w-6 text-gray-400" />
                                 </div>
-                                <h3 className="text-sm font-medium">No bug reports</h3>
-                                <p className="mt-1 text-sm">No bugs have been reported yet</p>
+                                <h3 className="text-sm font-medium">Tidak ada laporan bug</h3>
+                                <p className="mt-1 text-sm">Belum ada bug yang dilaporkan</p>
                             </div>
                         ) : (
                             <div className="max-h-[420px] overflow-y-auto px-1">
@@ -227,15 +227,15 @@ export default function Dashboard({ auth, stats, recentBugs = [], devLogs = [], 
 
                     <div className="rounded-2xl border border-gray-100 bg-white p-0 shadow-sm" data-tour="dev-log">
                         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white/80 p-6 backdrop-blur">
-                            <h4 className="text-xl font-semibold text-gray-900">Development Log</h4>
+                            <h4 className="text-xl font-semibold text-gray-900">Log Pengembangan</h4>
                         </div>
                         {devLogs.length === 0 ? (
                             <div className="p-10 text-center text-gray-500">
                                 <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
                                     <span className="text-lg">📝</span>
                                 </div>
-                                <h3 className="text-sm font-medium">No development logs</h3>
-                                <p className="mt-1 text-sm">Development activities will appear here</p>
+                                <h3 className="text-sm font-medium">Tidak ada log pengembangan</h3>
+                                <p className="mt-1 text-sm">Aktifitas pengembangan akan muncul disini</p>
                             </div>
                         ) : (
                             <div className="max-h-[420px] overflow-y-auto px-1">
@@ -243,7 +243,7 @@ export default function Dashboard({ auth, stats, recentBugs = [], devLogs = [], 
                                     <ol className="relative ml-3 border-l border-gray-200">
                                         {devLogs.map((log) => (
                                             <li key={log.id} className="mb-6 ml-6">
-                                                <span className="absolute -left-3 flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-white ring-4 ring-white">{typeof log.icon === 'string' ? log.icon : '•'}</span>
+                                                
                                                 <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:shadow-md">
                                                     <p className="text-sm font-semibold text-gray-900">{log.title}</p>
                                                     <p className="mt-1 text-sm text-gray-600">{log.description}</p>
